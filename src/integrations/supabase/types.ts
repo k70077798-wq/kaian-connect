@@ -229,23 +229,41 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          feeling: string | null
           id: string
           image_url: string | null
+          is_live: boolean
+          media_type: string | null
+          shares_count: number
           user_id: string
+          video_url: string | null
+          youtube_url: string | null
         }
         Insert: {
           content?: string | null
           created_at?: string
+          feeling?: string | null
           id?: string
           image_url?: string | null
+          is_live?: boolean
+          media_type?: string | null
+          shares_count?: number
           user_id: string
+          video_url?: string | null
+          youtube_url?: string | null
         }
         Update: {
           content?: string | null
           created_at?: string
+          feeling?: string | null
           id?: string
           image_url?: string | null
+          is_live?: boolean
+          media_type?: string | null
+          shares_count?: number
           user_id?: string
+          video_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -282,6 +300,36 @@ export type Database = {
           is_banned?: boolean
           username?: string | null
           verified?: boolean
+        }
+        Relationships: []
+      }
+      stories: {
+        Row: {
+          caption: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          media_type: string
+          media_url: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: string
+          media_url: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+          user_id?: string
         }
         Relationships: []
       }
