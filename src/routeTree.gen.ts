@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppReelsRouteImport } from './routes/_app/reels'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppPagesRouteImport } from './routes/_app/pages'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
@@ -34,6 +35,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppReelsRoute = AppReelsRouteImport.update({
+  id: '/reels',
+  path: '/reels',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/pages': typeof AppPagesRoute
   '/profile': typeof AppProfileRoute
+  '/reels': typeof AppReelsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/pages': typeof AppPagesRoute
   '/profile': typeof AppProfileRoute
+  '/reels': typeof AppReelsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/pages': typeof AppPagesRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/reels': typeof AppReelsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/pages'
     | '/profile'
+    | '/reels'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/pages'
     | '/profile'
+    | '/reels'
   id:
     | '__root__'
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_app/notifications'
     | '/_app/pages'
     | '/_app/profile'
+    | '/_app/reels'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -182,6 +194,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/reels': {
+      id: '/_app/reels'
+      path: '/reels'
+      fullPath: '/reels'
+      preLoaderRoute: typeof AppReelsRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/profile': {
       id: '/_app/profile'
@@ -251,6 +270,7 @@ interface AppRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPagesRoute: typeof AppPagesRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppReelsRoute: typeof AppReelsRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -262,6 +282,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppPagesRoute: AppPagesRoute,
   AppProfileRoute: AppProfileRoute,
+  AppReelsRoute: AppReelsRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

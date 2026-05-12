@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, Home, MessageCircle, Search, Sun, Moon, LogOut, User as UserIcon, Shield, Users, Image as ImageIcon } from "lucide-react";
+import { Bell, Home, MessageCircle, Search, LogOut, User as UserIcon, Shield, Users, Image as ImageIcon, Clapperboard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
