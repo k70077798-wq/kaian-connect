@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
+import { Progress } from "@/components/ui/progress";
+import { StoryViewer } from "@/components/StoryViewer";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
 interface Post {
@@ -75,7 +77,11 @@ export function Feed() {
   const [storyOpen, setStoryOpen] = useState(false);
   const [storyFile, setStoryFile] = useState<File | null>(null);
   const [storyCaption, setStoryCaption] = useState("");
-  const [storyViewer, setStoryViewer] = useState<Story | null>(null);
+  const [storyUploading, setStoryUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [storyIndex, setStoryIndex] = useState<number | null>(null);
+  const [commentSubmitting, setCommentSubmitting] = useState<Record<string, boolean>>({});
+  const [likeSubmitting, setLikeSubmitting] = useState<Record<string, boolean>>({});
 
   const initials = (s?: string | null) => (s || "K").slice(0, 2).toUpperCase();
 
@@ -146,7 +152,7 @@ export function Feed() {
   };
 
   const publish = async () => {
-    if (!user) return;
+    if (!user || publishing) return;
     const yt = youtubeInput ? extractYoutubeId(youtubeInput) : null;
     if (youtubeInput && !yt) return toast.error("رابط يوتيوب غير صالح");
     if (!content.trim() && !mediaFile && !yt && !feeling) return;
@@ -176,13 +182,15 @@ export function Feed() {
   };
 
   const toggleLike = async (post: Post) => {
-    if (!user) return;
+    if (!user || likeSubmitting[post.id]) return;
+    setLikeSubmitting(s => ({ ...s, [post.id]: true }));
     setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: !p.liked_by_me, likes_count: p.likes_count + (p.liked_by_me ? -1 : 1) } : p));
     if (post.liked_by_me) {
       await supabase.from("post_likes").delete().eq("post_id", post.id).eq("user_id", user.id);
     } else {
       await supabase.from("post_likes").insert({ post_id: post.id, user_id: user.id });
     }
+    setLikeSubmitting(s => ({ ...s, [post.id]: false }));
   };
 
   const sharePost = async (post: Post) => {
@@ -219,8 +227,10 @@ export function Feed() {
 
   const submitComment = async (postId: string) => {
     const txt = (commentText[postId] || "").trim();
-    if (!txt || !user) return;
+    if (!txt || !user || commentSubmitting[postId]) return;
+    setCommentSubmitting(s => ({ ...s, [postId]: true }));
     const { data, error } = await supabase.from("post_comments").insert({ post_id: postId, user_id: user.id, content: txt }).select("*").single();
+    setCommentSubmitting(s => ({ ...s, [postId]: false }));
     if (error || !data) return toast.error("تعذر التعليق");
     setCommentText({ ...commentText, [postId]: "" });
     setCommentsByPost(prev => ({
@@ -257,13 +267,19 @@ export function Feed() {
 
   // Stories
   const submitStory = async () => {
-    if (!storyFile || !user) return;
+    if (!storyFile || !user || storyUploading) return;
+    setStoryUploading(true); setUploadProgress(0);
+    // simulate progress while we upload (Supabase JS SDK doesn't expose progress)
+    const t = setInterval(() => setUploadProgress(p => Math.min(90, p + 8)), 200);
     const isVideo = storyFile.type.startsWith("video");
     const url = await uploadMedia(storyFile);
-    if (!url) return;
+    clearInterval(t);
+    setUploadProgress(100);
+    if (!url) { setStoryUploading(false); return; }
     const { error } = await supabase.from("stories").insert({
       user_id: user.id, media_url: url, media_type: isVideo ? "video" : "image", caption: storyCaption || null,
     });
+    setStoryUploading(false);
     if (error) return toast.error("تعذر النشر");
     toast.success("تمت إضافة القصة");
     setStoryFile(null); setStoryCaption(""); setStoryOpen(false);
@@ -324,11 +340,15 @@ export function Feed() {
           </div>
         )}
 
+        {publishing && (
+          <div className="mt-3"><Progress value={66} className="h-1.5" /></div>
+        )}
+
         <div className="mt-3 flex items-center justify-between border-t pt-3 flex-wrap gap-2">
           <div className="flex flex-wrap gap-1">
-            <Button variant="ghost" size="sm" className="gap-2" onClick={pickImage}><ImageIcon className="h-4 w-4 text-green-600" />صورة</Button>
-            <Button variant="ghost" size="sm" className="gap-2" onClick={pickVideo}><Video className="h-4 w-4 text-blue-600" />فيديو</Button>
-            <Button variant="ghost" size="sm" className="gap-2" onClick={() => setShowYoutube(s => !s)}><Youtube className="h-4 w-4 text-red-600" />يوتيوب</Button>
+            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={pickImage}><ImageIcon className="h-4 w-4 text-green-600" />صورة</Button>
+            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={pickVideo}><Video className="h-4 w-4 text-blue-600" />فيديو</Button>
+            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={() => setShowYoutube(s => !s)}><Youtube className="h-4 w-4 text-red-600" />يوتيوب</Button>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2"><Smile className="h-4 w-4 text-yellow-500" />شعور</Button>
@@ -359,8 +379,8 @@ export function Feed() {
             <span className="text-xs font-semibold">قصتك</span>
           </div>
         </button>
-        {stories.map(s => (
-          <button key={s.id} onClick={() => setStoryViewer(s)} className="relative h-44 w-28 shrink-0 rounded-2xl overflow-hidden shadow-card group">
+        {stories.map((s, i) => (
+          <button key={s.id} onClick={() => setStoryIndex(i)} className="relative h-44 w-28 shrink-0 rounded-2xl overflow-hidden shadow-card group">
             {s.media_type === "video" ? (
               <video src={s.media_url} className="absolute inset-0 h-full w-full object-cover" muted />
             ) : (
@@ -438,7 +458,7 @@ export function Feed() {
               )}
 
               <div className="mt-2 flex items-center justify-around border-t pt-2">
-                <Button variant="ghost" size="sm" onClick={() => toggleLike(post)} className={`gap-2 flex-1 ${post.liked_by_me ? "text-primary" : ""}`}>
+                <Button variant="ghost" size="sm" disabled={likeSubmitting[post.id]} onClick={() => toggleLike(post)} className={`gap-2 flex-1 ${post.liked_by_me ? "text-primary" : ""}`}>
                   <Heart className={`h-4 w-4 ${post.liked_by_me ? "fill-current" : ""}`} />إعجاب
                 </Button>
                 <Button variant="ghost" size="sm" className="gap-2 flex-1" onClick={() => toggleComments(post.id)}><MessageCircle className="h-4 w-4" />تعليق</Button>
@@ -471,7 +491,9 @@ export function Feed() {
                       placeholder="اكتب تعليقًا..."
                       className="rounded-full bg-muted border-0"
                     />
-                    <Button size="icon" onClick={() => submitComment(post.id)} className="rounded-full"><Send className="h-4 w-4" /></Button>
+                    <Button size="icon" disabled={commentSubmitting[post.id] || !(commentText[post.id] || "").trim()} onClick={() => submitComment(post.id)} className="rounded-full">
+                      {commentSubmitting[post.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -509,35 +531,15 @@ export function Feed() {
           ))}
           <Input value={storyCaption} onChange={e => setStoryCaption(e.target.value)} placeholder="تعليق (اختياري)" />
           <DialogFooter>
-            <Button onClick={submitStory} disabled={!storyFile} className="bg-brand-gradient">نشر القصة</Button>
+            <Button onClick={submitStory} disabled={!storyFile || storyUploading} className="bg-brand-gradient gap-2">
+              {storyUploading ? <><Loader2 className="h-4 w-4 animate-spin" />جارٍ الرفع... {Math.round(uploadProgress)}%</> : "نشر القصة"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Story viewer */}
-      <Dialog open={!!storyViewer} onOpenChange={(o) => { if (!o) setStoryViewer(null); }}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
-          {storyViewer && (
-            <div className="relative bg-black">
-              {storyViewer.media_type === "video" ? (
-                <video src={storyViewer.media_url} autoPlay controls className="w-full max-h-[80vh]" />
-              ) : (
-                <img src={storyViewer.media_url} alt="" className="w-full max-h-[80vh] object-contain" />
-              )}
-              <div className="absolute top-3 right-3 left-3 flex items-center gap-2 text-white">
-                <Avatar className="h-8 w-8 ring-2 ring-white">
-                  <AvatarImage src={storyViewer.profile?.avatar_url ?? undefined} />
-                  <AvatarFallback className="bg-brand-gradient text-xs">{initials(storyViewer.profile?.full_name)}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-bold drop-shadow">{storyViewer.profile?.full_name || "مستخدم"}</span>
-              </div>
-              {storyViewer.caption && (
-                <div className="absolute bottom-4 right-4 left-4 text-white text-center text-sm bg-black/40 rounded-lg p-2">{storyViewer.caption}</div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <StoryViewer stories={stories as any} index={storyIndex} onClose={() => setStoryIndex(null)} />
     </div>
   );
 }
