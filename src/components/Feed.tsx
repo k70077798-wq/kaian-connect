@@ -227,8 +227,10 @@ export function Feed() {
 
   const submitComment = async (postId: string) => {
     const txt = (commentText[postId] || "").trim();
-    if (!txt || !user) return;
+    if (!txt || !user || commentSubmitting[postId]) return;
+    setCommentSubmitting(s => ({ ...s, [postId]: true }));
     const { data, error } = await supabase.from("post_comments").insert({ post_id: postId, user_id: user.id, content: txt }).select("*").single();
+    setCommentSubmitting(s => ({ ...s, [postId]: false }));
     if (error || !data) return toast.error("تعذر التعليق");
     setCommentText({ ...commentText, [postId]: "" });
     setCommentsByPost(prev => ({
