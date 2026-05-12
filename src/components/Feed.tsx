@@ -454,7 +454,7 @@ export function Feed() {
               )}
 
               <div className="mt-2 flex items-center justify-around border-t pt-2">
-                <Button variant="ghost" size="sm" onClick={() => toggleLike(post)} className={`gap-2 flex-1 ${post.liked_by_me ? "text-primary" : ""}`}>
+                <Button variant="ghost" size="sm" disabled={likeSubmitting[post.id]} onClick={() => toggleLike(post)} className={`gap-2 flex-1 ${post.liked_by_me ? "text-primary" : ""}`}>
                   <Heart className={`h-4 w-4 ${post.liked_by_me ? "fill-current" : ""}`} />إعجاب
                 </Button>
                 <Button variant="ghost" size="sm" className="gap-2 flex-1" onClick={() => toggleComments(post.id)}><MessageCircle className="h-4 w-4" />تعليق</Button>
