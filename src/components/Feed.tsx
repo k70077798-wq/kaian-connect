@@ -523,29 +523,7 @@ export function Feed() {
       </Dialog>
 
       {/* Story viewer */}
-      <Dialog open={!!storyViewer} onOpenChange={(o) => { if (!o) setStoryViewer(null); }}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
-          {storyViewer && (
-            <div className="relative bg-black">
-              {storyViewer.media_type === "video" ? (
-                <video src={storyViewer.media_url} autoPlay controls className="w-full max-h-[80vh]" />
-              ) : (
-                <img src={storyViewer.media_url} alt="" className="w-full max-h-[80vh] object-contain" />
-              )}
-              <div className="absolute top-3 right-3 left-3 flex items-center gap-2 text-white">
-                <Avatar className="h-8 w-8 ring-2 ring-white">
-                  <AvatarImage src={storyViewer.profile?.avatar_url ?? undefined} />
-                  <AvatarFallback className="bg-brand-gradient text-xs">{initials(storyViewer.profile?.full_name)}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-bold drop-shadow">{storyViewer.profile?.full_name || "مستخدم"}</span>
-              </div>
-              {storyViewer.caption && (
-                <div className="absolute bottom-4 right-4 left-4 text-white text-center text-sm bg-black/40 rounded-lg p-2">{storyViewer.caption}</div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <StoryViewer stories={stories as any} index={storyIndex} onClose={() => setStoryIndex(null)} />
     </div>
   );
 }
