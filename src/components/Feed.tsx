@@ -152,7 +152,7 @@ export function Feed() {
   };
 
   const publish = async () => {
-    if (!user) return;
+    if (!user || publishing) return;
     const yt = youtubeInput ? extractYoutubeId(youtubeInput) : null;
     if (youtubeInput && !yt) return toast.error("رابط يوتيوب غير صالح");
     if (!content.trim() && !mediaFile && !yt && !feeling) return;
