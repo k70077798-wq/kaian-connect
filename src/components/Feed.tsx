@@ -263,13 +263,19 @@ export function Feed() {
 
   // Stories
   const submitStory = async () => {
-    if (!storyFile || !user) return;
+    if (!storyFile || !user || storyUploading) return;
+    setStoryUploading(true); setUploadProgress(0);
+    // simulate progress while we upload (Supabase JS SDK doesn't expose progress)
+    const t = setInterval(() => setUploadProgress(p => Math.min(90, p + 8)), 200);
     const isVideo = storyFile.type.startsWith("video");
     const url = await uploadMedia(storyFile);
-    if (!url) return;
+    clearInterval(t);
+    setUploadProgress(100);
+    if (!url) { setStoryUploading(false); return; }
     const { error } = await supabase.from("stories").insert({
       user_id: user.id, media_url: url, media_type: isVideo ? "video" : "image", caption: storyCaption || null,
     });
+    setStoryUploading(false);
     if (error) return toast.error("تعذر النشر");
     toast.success("تمت إضافة القصة");
     setStoryFile(null); setStoryCaption(""); setStoryOpen(false);
