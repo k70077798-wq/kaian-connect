@@ -515,7 +515,9 @@ export function Feed() {
           ))}
           <Input value={storyCaption} onChange={e => setStoryCaption(e.target.value)} placeholder="تعليق (اختياري)" />
           <DialogFooter>
-            <Button onClick={submitStory} disabled={!storyFile} className="bg-brand-gradient">نشر القصة</Button>
+            <Button onClick={submitStory} disabled={!storyFile || storyUploading} className="bg-brand-gradient gap-2">
+              {storyUploading ? <><Loader2 className="h-4 w-4 animate-spin" />جارٍ الرفع... {Math.round(uploadProgress)}%</> : "نشر القصة"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
