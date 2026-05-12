@@ -340,11 +340,15 @@ export function Feed() {
           </div>
         )}
 
+        {publishing && (
+          <div className="mt-3"><Progress value={66} className="h-1.5" /></div>
+        )}
+
         <div className="mt-3 flex items-center justify-between border-t pt-3 flex-wrap gap-2">
           <div className="flex flex-wrap gap-1">
-            <Button variant="ghost" size="sm" className="gap-2" onClick={pickImage}><ImageIcon className="h-4 w-4 text-green-600" />صورة</Button>
-            <Button variant="ghost" size="sm" className="gap-2" onClick={pickVideo}><Video className="h-4 w-4 text-blue-600" />فيديو</Button>
-            <Button variant="ghost" size="sm" className="gap-2" onClick={() => setShowYoutube(s => !s)}><Youtube className="h-4 w-4 text-red-600" />يوتيوب</Button>
+            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={pickImage}><ImageIcon className="h-4 w-4 text-green-600" />صورة</Button>
+            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={pickVideo}><Video className="h-4 w-4 text-blue-600" />فيديو</Button>
+            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={() => setShowYoutube(s => !s)}><Youtube className="h-4 w-4 text-red-600" />يوتيوب</Button>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2"><Smile className="h-4 w-4 text-yellow-500" />شعور</Button>
