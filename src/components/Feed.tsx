@@ -182,13 +182,15 @@ export function Feed() {
   };
 
   const toggleLike = async (post: Post) => {
-    if (!user) return;
+    if (!user || likeSubmitting[post.id]) return;
+    setLikeSubmitting(s => ({ ...s, [post.id]: true }));
     setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: !p.liked_by_me, likes_count: p.likes_count + (p.liked_by_me ? -1 : 1) } : p));
     if (post.liked_by_me) {
       await supabase.from("post_likes").delete().eq("post_id", post.id).eq("user_id", user.id);
     } else {
       await supabase.from("post_likes").insert({ post_id: post.id, user_id: user.id });
     }
+    setLikeSubmitting(s => ({ ...s, [post.id]: false }));
   };
 
   const sharePost = async (post: Post) => {
