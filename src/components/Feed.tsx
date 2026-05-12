@@ -77,7 +77,11 @@ export function Feed() {
   const [storyOpen, setStoryOpen] = useState(false);
   const [storyFile, setStoryFile] = useState<File | null>(null);
   const [storyCaption, setStoryCaption] = useState("");
-  const [storyViewer, setStoryViewer] = useState<Story | null>(null);
+  const [storyUploading, setStoryUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [storyIndex, setStoryIndex] = useState<number | null>(null);
+  const [commentSubmitting, setCommentSubmitting] = useState<Record<string, boolean>>({});
+  const [likeSubmitting, setLikeSubmitting] = useState<Record<string, boolean>>({});
 
   const initials = (s?: string | null) => (s || "K").slice(0, 2).toUpperCase();
 
