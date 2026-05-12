@@ -365,8 +365,8 @@ export function Feed() {
             <span className="text-xs font-semibold">قصتك</span>
           </div>
         </button>
-        {stories.map(s => (
-          <button key={s.id} onClick={() => setStoryViewer(s)} className="relative h-44 w-28 shrink-0 rounded-2xl overflow-hidden shadow-card group">
+        {stories.map((s, i) => (
+          <button key={s.id} onClick={() => setStoryIndex(i)} className="relative h-44 w-28 shrink-0 rounded-2xl overflow-hidden shadow-card group">
             {s.media_type === "video" ? (
               <video src={s.media_url} className="absolute inset-0 h-full w-full object-cover" muted />
             ) : (
