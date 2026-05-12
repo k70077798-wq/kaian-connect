@@ -19,6 +19,7 @@ import { ar } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { StoryViewer } from "@/components/StoryViewer";
+import { ReelsStrip } from "@/components/ReelsStrip";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
 interface Post {
@@ -397,6 +398,8 @@ export function Feed() {
           </button>
         ))}
       </div>
+
+      <ReelsStrip />
 
       {loading && <Card className="p-12 text-center text-muted-foreground">جاري التحميل...</Card>}
 

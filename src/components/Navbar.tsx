@@ -1,17 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
-import { useTheme } from "@/lib/theme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, Home, MessageCircle, Search, Sun, Moon, LogOut, User as UserIcon, Shield, Users, Image as ImageIcon } from "lucide-react";
+import { Bell, Home, MessageCircle, Search, LogOut, User as UserIcon, Shield, Users, Image as ImageIcon, Clapperboard } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function Navbar() {
   const { user, isAdmin, signOut } = useAuth();
-  const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
 
@@ -45,9 +43,9 @@ export function Navbar() {
           <Link to="/notifications" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الإشعارات"><Bell className="h-5 w-5" /></Link>
         </nav>
 
-        <Button variant="ghost" size="icon" onClick={toggle} aria-label="تبديل المظهر">
-          {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-        </Button>
+        <Link to="/reels" className="rounded-xl p-2.5 hover:bg-muted transition-colors text-primary" aria-label="ريلز">
+          <Clapperboard className="h-5 w-5" />
+        </Link>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
