@@ -487,7 +487,9 @@ export function Feed() {
                       placeholder="اكتب تعليقًا..."
                       className="rounded-full bg-muted border-0"
                     />
-                    <Button size="icon" onClick={() => submitComment(post.id)} className="rounded-full"><Send className="h-4 w-4" /></Button>
+                    <Button size="icon" disabled={commentSubmitting[post.id] || !(commentText[post.id] || "").trim()} onClick={() => submitComment(post.id)} className="rounded-full">
+                      {commentSubmitting[post.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
               )}
