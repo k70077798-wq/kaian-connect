@@ -12,11 +12,27 @@ export function Navbar() {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
+  const [unread, setUnread] = useState(0);
+  const [pendingFriends, setPendingFriends] = useState(0);
 
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("full_name, avatar_url, username").eq("id", user.id).maybeSingle()
       .then(({ data }) => setProfile(data));
+    const refreshNotif = async () => {
+      const { count } = await supabase.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("read", false);
+      setUnread(count || 0);
+    };
+    const refreshFriends = async () => {
+      const { count } = await supabase.from("friendships").select("*", { count: "exact", head: true }).eq("addressee_id", user.id).eq("status", "pending");
+      setPendingFriends(count || 0);
+    };
+    refreshNotif(); refreshFriends();
+    const ch = supabase.channel("navbar-badges")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, refreshNotif)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, refreshFriends)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
 
   const initials = (profile?.full_name || user?.email || "K").slice(0, 2).toUpperCase();
