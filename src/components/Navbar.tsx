@@ -54,9 +54,15 @@ export function Navbar() {
 
         <nav className="flex items-center gap-1 mx-auto">
           <Link to="/home" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الرئيسية"><Home className="h-5 w-5" /></Link>
-          <Link to="/friends" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الأصدقاء"><Users className="h-5 w-5" /></Link>
+          <Link to="/friends" className="relative rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الأصدقاء">
+            <Users className="h-5 w-5" />
+            {pendingFriends > 0 && <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">{pendingFriends}</span>}
+          </Link>
           <Link to="/messages" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الرسائل"><MessageCircle className="h-5 w-5" /></Link>
-          <Link to="/notifications" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الإشعارات"><Bell className="h-5 w-5" /></Link>
+          <Link to="/notifications" className="relative rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الإشعارات">
+            <Bell className="h-5 w-5" />
+            {unread > 0 && <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">{unread > 99 ? "99+" : unread}</span>}
+          </Link>
         </nav>
 
         <Link to="/reels" className="rounded-xl p-2.5 hover:bg-muted transition-colors text-primary" aria-label="ريلز">
