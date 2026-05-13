@@ -182,7 +182,38 @@ function ReelsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [user?.id]);
+  useEffect(() => {
+    load();
+    const ch = supabase.channel("reels-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, (payload) => {
+        const row: any = payload.new || payload.old;
+        if (!row?.post_id) return;
+        setReels(prev => prev.map(r => {
+          if (r.id !== row.post_id) return r;
+          if (payload.eventType === "INSERT") {
+            return { ...r, likes_count: r.likes_count + 1, liked_by_me: row.user_id === user?.id ? true : r.liked_by_me };
+          }
+          if (payload.eventType === "DELETE") {
+            return { ...r, likes_count: Math.max(0, r.likes_count - 1), liked_by_me: row.user_id === user?.id ? false : r.liked_by_me };
+          }
+          return r;
+        }));
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "post_comments" }, (payload) => {
+        const row: any = payload.new;
+        setReels(prev => prev.map(r => r.id === row.post_id ? { ...r, comments_count: r.comments_count + 1 } : r));
+        setCommentsOpen(curr => {
+          if (curr && curr.id === row.post_id && row.user_id !== user?.id) {
+            supabase.from("profiles").select("id, full_name, avatar_url").eq("id", row.user_id).maybeSingle()
+              .then(({ data }) => setComments(prev => [...prev, { ...row, profile: data }]));
+          }
+          return curr;
+        });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "posts" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id]);
 
   // observe which is active
   useEffect(() => {
