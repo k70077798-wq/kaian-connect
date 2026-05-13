@@ -147,7 +147,7 @@ function AdminPage() {
                             <AvatarFallback className="bg-brand-gradient text-primary-foreground text-xs">{(u.full_name || "K").slice(0,2).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <span className="font-semibold">{u.full_name || "—"}</span>
-                          {u.verified && <span className="text-primary">✓</span>}
+                          {u.verified && <VerifiedBadge style={(u.verified_style as any) || "brand"} size={14} />}
                         </div>
                       </td>
                       <td className="py-3 px-2 text-muted-foreground">@{u.username}</td>
@@ -155,9 +155,15 @@ function AdminPage() {
                         {u.is_banned ? <Badge variant="destructive">محظور</Badge> : <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-0">نشط</Badge>}
                       </td>
                       <td className="py-3 px-2">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button size="sm" variant="outline" onClick={() => toggleVerify(u.id, !!u.verified)}>
-                            <CheckCircle2 className="h-3 w-3 ms-1" />{u.verified ? "إلغاء التوثيق" : "توثيق"}
+                            <CheckCircle2 className="h-3 w-3 ms-1" />{u.verified ? "إلغاء" : "توثيق"}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setVerifyStyle(u.id, "brand")} className="gap-1">
+                            <VerifiedBadge style="brand" size={12} />رسمي
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setVerifyStyle(u.id, "gold")} className="gap-1">
+                            <VerifiedBadge style="gold" size={12} />ذهبي
                           </Button>
                           <Button size="sm" variant={u.is_banned ? "outline" : "destructive"} onClick={() => toggleBan(u.id, !!u.is_banned)}>
                             <Ban className="h-3 w-3 ms-1" />{u.is_banned ? "رفع الحظر" : "حظر"}
