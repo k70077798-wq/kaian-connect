@@ -49,10 +49,18 @@ function AdminPage() {
   useEffect(() => { if (isAdmin) refresh(); }, [isAdmin]);
 
   const toggleVerify = async (id: string, current: boolean) => {
-    await supabase.from("profiles").update({ verified: !current }).eq("id", id);
+    const { error } = await supabase.from("profiles").update({ verified: !current }).eq("id", id);
+    if (error) return toast.error("فشل: " + error.message);
     toast.success(current ? "تم إلغاء التوثيق" : "تم توثيق الحساب");
     refresh();
   };
+  const setVerifyStyle = async (id: string, style: "brand" | "gold") => {
+    const { error } = await supabase.from("profiles").update({ verified_style: style, verified: true }).eq("id", id);
+    if (error) return toast.error("فشل: " + error.message);
+    toast.success(style === "gold" ? "تم تعيين التوثيق الذهبي" : "تم تعيين التوثيق الرسمي");
+    refresh();
+  };
+
   const toggleBan = async (id: string, current: boolean) => {
     await supabase.from("profiles").update({ is_banned: !current }).eq("id", id);
     toast.success(current ? "تم رفع الحظر" : "تم حظر المستخدم");
