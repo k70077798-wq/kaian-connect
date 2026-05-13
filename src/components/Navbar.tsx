@@ -12,11 +12,27 @@ export function Navbar() {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
+  const [unread, setUnread] = useState(0);
+  const [pendingFriends, setPendingFriends] = useState(0);
 
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("full_name, avatar_url, username").eq("id", user.id).maybeSingle()
       .then(({ data }) => setProfile(data));
+    const refreshNotif = async () => {
+      const { count } = await supabase.from("notifications").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("read", false);
+      setUnread(count || 0);
+    };
+    const refreshFriends = async () => {
+      const { count } = await supabase.from("friendships").select("*", { count: "exact", head: true }).eq("addressee_id", user.id).eq("status", "pending");
+      setPendingFriends(count || 0);
+    };
+    refreshNotif(); refreshFriends();
+    const ch = supabase.channel("navbar-badges")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, refreshNotif)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, refreshFriends)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
 
   const initials = (profile?.full_name || user?.email || "K").slice(0, 2).toUpperCase();
@@ -38,9 +54,15 @@ export function Navbar() {
 
         <nav className="flex items-center gap-1 mx-auto">
           <Link to="/home" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الرئيسية"><Home className="h-5 w-5" /></Link>
-          <Link to="/friends" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الأصدقاء"><Users className="h-5 w-5" /></Link>
+          <Link to="/friends" className="relative rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الأصدقاء">
+            <Users className="h-5 w-5" />
+            {pendingFriends > 0 && <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">{pendingFriends}</span>}
+          </Link>
           <Link to="/messages" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الرسائل"><MessageCircle className="h-5 w-5" /></Link>
-          <Link to="/notifications" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الإشعارات"><Bell className="h-5 w-5" /></Link>
+          <Link to="/notifications" className="relative rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الإشعارات">
+            <Bell className="h-5 w-5" />
+            {unread > 0 && <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">{unread > 99 ? "99+" : unread}</span>}
+          </Link>
         </nav>
 
         <Link to="/reels" className="rounded-xl p-2.5 hover:bg-muted transition-colors text-primary" aria-label="ريلز">
