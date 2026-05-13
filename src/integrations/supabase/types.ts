@@ -278,6 +278,7 @@ export type Database = {
           is_banned: boolean
           username: string | null
           verified: boolean
+          verified_style: string
         }
         Insert: {
           avatar_url?: string | null
@@ -289,6 +290,7 @@ export type Database = {
           is_banned?: boolean
           username?: string | null
           verified?: boolean
+          verified_style?: string
         }
         Update: {
           avatar_url?: string | null
@@ -300,6 +302,7 @@ export type Database = {
           is_banned?: boolean
           username?: string | null
           verified?: boolean
+          verified_style?: string
         }
         Relationships: []
       }
