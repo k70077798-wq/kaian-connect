@@ -9,7 +9,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Pencil, MapPin, Calendar, Briefcase, Heart, Camera, Loader2, UserPlus, Users } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { Pencil, MapPin, Home as HomeIcon, Heart, Camera, Loader2, LayoutGrid, List as ListIcon, Filter, Settings2, Link2, Briefcase, MoreHorizontal, ChevronDown, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/profile")({ component: ProfilePage });
@@ -25,9 +26,11 @@ function ProfilePage() {
   const [editOpen, setEditOpen] = useState(false);
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
+  const [link, setLink] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [view, setView] = useState<"list" | "grid">("list");
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
 
@@ -44,10 +47,9 @@ function ProfilePage() {
     setFriendsCount((friends || []).length);
     setFollowersCount((friends || []).length + (requests || []).length);
     setPhotos((ps || []).filter((p: any) => p.image_url).map((p: any) => p.image_url));
-
     const friendIds = (friends || []).map((f: any) => f.requester_id === user.id ? f.addressee_id : f.requester_id);
     if (friendIds.length) {
-      const { data: fProfs } = await supabase.from("profiles").select("id, full_name, username, avatar_url").in("id", friendIds);
+      const { data: fProfs } = await supabase.from("profiles").select("id, full_name, username, avatar_url, verified, verified_style").in("id", friendIds);
       setFriendsList(fProfs || []);
     } else setFriendsList([]);
   };
@@ -91,6 +93,7 @@ function ProfilePage() {
   const openEdit = () => {
     setFullName(profile?.full_name || "");
     setBio(profile?.bio || "");
+    setLink((profile as any)?.link || "");
     setEditOpen(true);
   };
 
@@ -105,138 +108,275 @@ function ProfilePage() {
     toast.success("تم الحفظ");
   };
 
+  const deletePost = async (id: string) => {
+    if (!confirm("هل تريد حذف هذا المنشور؟")) return;
+    await supabase.from("posts").delete().eq("id", id);
+    setPosts(p => p.filter(x => x.id !== id));
+    toast.success("تم الحذف");
+  };
+
   if (!profile) return <div className="p-12 text-center text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
   const initials = (profile.full_name || "K").slice(0, 2).toUpperCase();
+  const vStyle: "brand" | "gold" = (profile.verified_style as any) || "brand";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="mx-auto max-w-6xl px-0 sm:px-4 py-0 sm:py-6">
       <input ref={avatarRef} type="file" accept="image/*" hidden onChange={e => onAvatarChange(e.target.files?.[0] || null)} />
       <input ref={coverRef} type="file" accept="image/*" hidden onChange={e => onCoverChange(e.target.files?.[0] || null)} />
 
-      <Card className="overflow-hidden shadow-card">
-        <div className="h-64 sm:h-80 bg-brand-gradient relative group">
+      {/* Cover + header */}
+      <Card className="overflow-hidden shadow-card rounded-none sm:rounded-2xl">
+        <div className="h-52 sm:h-80 bg-brand-gradient relative">
           {profile.cover_url && <img src={profile.cover_url} className="absolute inset-0 w-full h-full object-cover" alt="" />}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
           <Button
             onClick={() => coverRef.current?.click()}
             disabled={uploadingCover}
             size="sm"
-            className="absolute bottom-3 left-3 gap-2 bg-black/60 text-white hover:bg-black/80 backdrop-blur"
+            className="absolute bottom-3 left-3 gap-2 bg-white/95 text-foreground hover:bg-white shadow-elegant"
           >
             {uploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-            تغيير الغلاف
+            تعديل صورة الغلاف
           </Button>
         </div>
-        <div className="px-6 pb-6 -mt-16 flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6">
-          <div className="relative">
-            <Avatar className="h-32 w-32 ring-4 ring-card">
+
+        <div className="px-4 sm:px-8 pb-5 -mt-14 sm:-mt-20 flex flex-col-reverse sm:flex-row-reverse items-center sm:items-end gap-4 sm:gap-6">
+          {/* Avatar (right side in RTL) */}
+          <div className="relative shrink-0">
+            <Avatar className="h-32 w-32 sm:h-40 sm:w-40 ring-4 ring-card">
               <AvatarImage src={profile.avatar_url ?? undefined} />
               <AvatarFallback className="bg-brand-gradient text-primary-foreground text-4xl font-black">{initials}</AvatarFallback>
             </Avatar>
             <button
               onClick={() => avatarRef.current?.click()}
               disabled={uploadingAvatar}
-              className="absolute bottom-1 left-1 grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-elegant hover:scale-105 transition disabled:opacity-60"
+              className="absolute bottom-1 left-1 grid h-10 w-10 place-items-center rounded-full bg-card border-2 border-background shadow-elegant hover:scale-105 transition disabled:opacity-60"
               aria-label="تغيير الصورة"
             >
               {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
             </button>
           </div>
-          <div className="flex-1 mt-2">
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-black">{profile.full_name || "مستخدم"}</h1>
-              {profile.verified && <span className="text-primary text-xl">✓</span>}
+
+          {/* Name + meta */}
+          <div className="flex-1 text-center sm:text-right mt-2 sm:mb-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-black">{profile.full_name || "مستخدم"}</h1>
+              {profile.verified && <VerifiedBadge style={vStyle} size={26} />}
             </div>
-            <p className="text-muted-foreground">@{profile.username}</p>
-            {profile.bio && <p className="mt-2 text-sm">{profile.bio}</p>}
-            <div className="mt-3 flex gap-4 text-sm">
-              <div className="flex items-center gap-1.5"><Users className="h-4 w-4 text-primary" /><b>{friendsCount}</b><span className="text-muted-foreground">صديق</span></div>
-              <div className="flex items-center gap-1.5"><UserPlus className="h-4 w-4 text-primary" /><b>{followersCount}</b><span className="text-muted-foreground">متابع</span></div>
-              <div className="flex items-center gap-1.5"><b>{posts.length}</b><span className="text-muted-foreground">منشور</span></div>
+            <p className="text-sm text-muted-foreground mt-1">
+              <b className="text-foreground">{followersCount.toLocaleString("ar")}</b> متابعون
+              <span className="mx-2">·</span>
+              <b className="text-foreground">{friendsCount.toLocaleString("ar")}</b> صديق
+            </p>
+            <div className="mt-2 flex items-center justify-center sm:justify-start gap-3 text-xs text-muted-foreground flex-wrap">
+              <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />Sanaa</span>
+              <span className="flex items-center gap-1"><HomeIcon className="h-3.5 w-3.5" />الخير بالربوع</span>
+              <span className="flex items-center gap-1">@{profile.username}</span>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={openEdit} className="bg-brand-gradient gap-2"><Pencil className="h-4 w-4" />تعديل الملف</Button>
+
+          {/* Actions (left side) */}
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-start sm:mb-2">
+            <Button onClick={openEdit} className="bg-brand-gradient gap-2"><Pencil className="h-4 w-4" />تعديل</Button>
+            <Button variant="outline" className="gap-2"><BarChart3 className="h-4 w-4" />لوحة المعلومات</Button>
+            <Button variant="outline" size="icon"><ChevronDown className="h-4 w-4" /></Button>
           </div>
         </div>
-      </Card>
 
-      <Tabs defaultValue="timeline" className="mt-6">
-        <TabsList>
-          <TabsTrigger value="timeline">الخط الزمني</TabsTrigger>
-          <TabsTrigger value="about">عن</TabsTrigger>
-          <TabsTrigger value="friends">الأصدقاء ({friendsCount})</TabsTrigger>
-          <TabsTrigger value="photos">الصور</TabsTrigger>
-        </TabsList>
-        <TabsContent value="timeline" className="mt-4 grid lg:grid-cols-[280px_1fr] gap-6">
-          <div className="space-y-4">
-            <Card className="p-5 shadow-card">
-              <h3 className="font-bold mb-3">المعلومات</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><Briefcase className="h-4 w-4" />يعمل في KAIAN</li>
-                <li className="flex items-center gap-2"><MapPin className="h-4 w-4" />يعيش في الرياض</li>
-                <li className="flex items-center gap-2"><Heart className="h-4 w-4" />الحالة الاجتماعية</li>
-                <li className="flex items-center gap-2"><Calendar className="h-4 w-4" />انضم {new Date(profile.created_at).toLocaleDateString("ar")}</li>
-              </ul>
-            </Card>
-            <Card className="p-5 shadow-card">
-              <h3 className="font-bold mb-3">الأصدقاء · {friendsCount}</h3>
-              <div className="grid grid-cols-3 gap-2">
-                {friendsList.slice(0, 9).map(f => (
-                  <div key={f.id} className="flex flex-col items-center gap-1">
-                    <Avatar className="h-16 w-16 rounded-lg"><AvatarImage src={f.avatar_url ?? undefined} className="rounded-lg" /><AvatarFallback className="rounded-lg bg-muted">{(f.full_name || "K").slice(0, 2)}</AvatarFallback></Avatar>
-                    <span className="text-[11px] truncate w-full text-center">{f.full_name}</span>
+        {/* Tabs strip */}
+        <div className="border-t px-2 sm:px-6">
+          <Tabs defaultValue="all">
+            <TabsList className="bg-transparent h-12 gap-1 justify-start overflow-x-auto">
+              <TabsTrigger value="all" className="data-[state=active]:bg-accent data-[state=active]:text-primary rounded-lg">الكل</TabsTrigger>
+              <TabsTrigger value="reels" className="rounded-lg">ريلز</TabsTrigger>
+              <TabsTrigger value="photos" className="rounded-lg">الصور</TabsTrigger>
+              <TabsTrigger value="friends" className="rounded-lg">الأصدقاء</TabsTrigger>
+              <TabsTrigger value="more" className="rounded-lg">المزيد <ChevronDown className="h-3 w-3 ms-1" /></TabsTrigger>
+              <TabsTrigger value="about" className="rounded-lg mr-auto">حول</TabsTrigger>
+            </TabsList>
+
+            {/* Content */}
+            <TabsContent value="all" className="mt-4 grid lg:grid-cols-[360px_1fr] gap-5 px-2 sm:px-0 pb-6">
+              {/* Right rail (in RTL appears right) */}
+              <div className="space-y-4 order-2 lg:order-1">
+                <Card className="p-5 shadow-card">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold">التفاصيل الشخصية</h3>
+                    <button className="text-muted-foreground hover:text-primary"><Pencil className="h-4 w-4" /></button>
                   </div>
-                ))}
-                {friendsList.length === 0 && <p className="col-span-3 text-xs text-muted-foreground text-center py-3">لا يوجد أصدقاء بعد</p>}
+                  <ul className="space-y-3 text-sm">
+                    <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" />يعيش في صنعاء</li>
+                    <li className="flex items-center gap-2"><HomeIcon className="h-4 w-4 text-muted-foreground" />من صنعاء</li>
+                    <li className="flex items-center gap-2"><Heart className="h-4 w-4 text-muted-foreground" />مخطوب</li>
+                  </ul>
+                  <button className="mt-3 text-xs text-muted-foreground hover:text-primary">عرض المزيد من التفاصيل الشخصية</button>
+                </Card>
+
+                <Card className="p-5 shadow-card">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold">الروابط</h3>
+                    <button className="text-muted-foreground hover:text-primary"><Pencil className="h-4 w-4" /></button>
+                  </div>
+                  <a href="#" className="flex items-center gap-2 text-sm text-primary hover:underline">
+                    <Link2 className="h-4 w-4" />kaian-platform.com
+                  </a>
+                </Card>
+
+                <Card className="p-5 shadow-card">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold">الأصدقاء · {friendsCount}</h3>
+                    <button className="text-xs text-primary">عرض الكل</button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {friendsList.slice(0, 9).map(f => (
+                      <div key={f.id} className="flex flex-col items-center gap-1">
+                        <Avatar className="h-16 w-16 rounded-lg"><AvatarImage src={f.avatar_url ?? undefined} className="rounded-lg" /><AvatarFallback className="rounded-lg bg-muted">{(f.full_name || "K").slice(0, 2)}</AvatarFallback></Avatar>
+                        <span className="text-[11px] truncate w-full text-center">{f.full_name}</span>
+                      </div>
+                    ))}
+                    {friendsList.length === 0 && <p className="col-span-3 text-xs text-muted-foreground text-center py-3">لا يوجد أصدقاء بعد</p>}
+                  </div>
+                </Card>
               </div>
-            </Card>
-          </div>
-          <div className="space-y-4">
-            {posts.length === 0 && <Card className="p-12 text-center text-muted-foreground shadow-card">لا توجد منشورات بعد</Card>}
-            {posts.map(p => (
-              <Card key={p.id} className="p-4 shadow-card">
-                {p.content && <p className="text-sm whitespace-pre-wrap">{p.content}</p>}
-                {p.image_url && <img src={p.image_url} className="mt-2 w-full rounded-xl" alt="" />}
-                <p className="text-xs text-muted-foreground mt-2">{new Date(p.created_at).toLocaleString("ar")}</p>
+
+              {/* Main column */}
+              <div className="space-y-4 order-1 lg:order-2">
+                {/* Composer */}
+                <Card className="p-3 shadow-card">
+                  <div className="flex items-center gap-3 px-1">
+                    <Avatar className="h-10 w-10"><AvatarImage src={profile.avatar_url ?? undefined} /><AvatarFallback className="bg-brand-gradient text-primary-foreground">{initials}</AvatarFallback></Avatar>
+                    <button className="flex-1 text-right rounded-full bg-muted hover:bg-muted/70 px-4 py-2.5 text-sm text-muted-foreground">بم تفكر؟</button>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 border-t pt-2 text-xs sm:text-sm">
+                    <button className="flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-muted">
+                      <span className="text-rose-500">●</span> فيديو بث مباشر
+                    </button>
+                    <button className="flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-muted">
+                      <span className="text-emerald-500">🖼</span> صورة/فيديو
+                    </button>
+                    <button className="flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-muted">
+                      <span className="text-violet-500">▶</span> مقطع ريلز
+                    </button>
+                  </div>
+                </Card>
+
+                {/* Posts header */}
+                <Card className="p-4 shadow-card">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <h3 className="text-xl font-black">المنشورات</h3>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="gap-1.5"><Filter className="h-4 w-4" />الفلاتر</Button>
+                      <Button variant="outline" size="sm" className="gap-1.5"><Settings2 className="h-4 w-4" />إدارة المنشورات</Button>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 border-b">
+                    <button onClick={() => setView("list")} className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition ${view === "list" ? "text-primary border-b-2 border-primary -mb-px" : "text-muted-foreground"}`}>
+                      <ListIcon className="h-4 w-4" />طريقة عرض القائمة
+                    </button>
+                    <button onClick={() => setView("grid")} className={`flex items-center justify-center gap-2 py-2.5 text-sm font-semibold transition ${view === "grid" ? "text-primary border-b-2 border-primary -mb-px" : "text-muted-foreground"}`}>
+                      <LayoutGrid className="h-4 w-4" />طريقة عرض الشبكة
+                    </button>
+                  </div>
+                </Card>
+
+                {/* Posts */}
+                {posts.length === 0 && <Card className="p-12 text-center text-muted-foreground shadow-card">لا توجد منشورات بعد</Card>}
+                {view === "list" ? (
+                  <div className="space-y-4">
+                    {posts.map(p => (
+                      <Card key={p.id} className="p-4 shadow-card">
+                        <div className="flex items-start gap-3">
+                          <Avatar className="h-10 w-10"><AvatarImage src={profile.avatar_url ?? undefined} /><AvatarFallback className="bg-brand-gradient text-primary-foreground">{initials}</AvatarFallback></Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-sm">{profile.full_name}</span>
+                              {profile.verified && <VerifiedBadge style={vStyle} size={14} />}
+                            </div>
+                            <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString("ar")}</p>
+                          </div>
+                          <button onClick={() => deletePost(p.id)} className="text-muted-foreground hover:text-destructive p-1.5 rounded-full hover:bg-muted" aria-label="خيارات">
+                            <MoreHorizontal className="h-5 w-5" />
+                          </button>
+                        </div>
+                        {p.content && <p className="text-sm whitespace-pre-wrap mt-3 leading-relaxed">{p.content}</p>}
+                        {p.image_url && <img src={p.image_url} className="mt-3 w-full rounded-xl" alt="" />}
+                        {p.video_url && <video src={p.video_url} controls className="mt-3 w-full rounded-xl" />}
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {posts.map(p => (
+                      <div key={p.id} className="aspect-square relative rounded-xl overflow-hidden bg-muted group">
+                        {p.image_url ? (
+                          <img src={p.image_url} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-full h-full p-3 text-xs flex items-center justify-center text-center">{p.content?.slice(0, 80) || "—"}</div>
+                        )}
+                        <button onClick={() => deletePost(p.id)} className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="reels" className="mt-4 px-2 sm:px-0 pb-6">
+              <Card className="p-12 text-center text-muted-foreground shadow-card">قسم الريلز قريباً</Card>
+            </TabsContent>
+
+            <TabsContent value="photos" className="mt-4 px-2 sm:px-0 pb-6">
+              <Card className="p-6 shadow-card">
+                {photos.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">لا توجد صور بعد</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {photos.map((src, i) => <img key={i} src={src} className="aspect-square w-full rounded-lg object-cover" alt="" />)}
+                  </div>
+                )}
               </Card>
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="about" className="mt-4">
-          <Card className="p-8 shadow-card space-y-3">
-            <h3 className="font-bold text-lg">نبذة</h3>
-            <p className="text-sm text-muted-foreground">{profile.bio || "لا توجد نبذة بعد. اضغط على \"تعديل الملف\" لإضافة واحدة."}</p>
-          </Card>
-        </TabsContent>
-        <TabsContent value="friends" className="mt-4">
-          <Card className="p-6 shadow-card">
-            {friendsList.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">لا يوجد أصدقاء بعد</p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {friendsList.map(f => (
-                  <Card key={f.id} className="p-3 flex flex-col items-center gap-2">
-                    <Avatar className="h-20 w-20"><AvatarImage src={f.avatar_url ?? undefined} /><AvatarFallback className="bg-brand-gradient text-primary-foreground">{(f.full_name || "K").slice(0, 2)}</AvatarFallback></Avatar>
-                    <p className="font-semibold text-sm">{f.full_name}</p>
-                    <p className="text-xs text-muted-foreground">@{f.username}</p>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </Card>
-        </TabsContent>
-        <TabsContent value="photos" className="mt-4">
-          <Card className="p-6 shadow-card">
-            {photos.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">لا توجد صور بعد</p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {photos.map((src, i) => <img key={i} src={src} className="aspect-square w-full rounded-lg object-cover" alt="" />)}
-              </div>
-            )}
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+
+            <TabsContent value="friends" className="mt-4 px-2 sm:px-0 pb-6">
+              <Card className="p-6 shadow-card">
+                {friendsList.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">لا يوجد أصدقاء بعد</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {friendsList.map(f => (
+                      <Card key={f.id} className="p-3 flex flex-col items-center gap-2">
+                        <Avatar className="h-20 w-20"><AvatarImage src={f.avatar_url ?? undefined} /><AvatarFallback className="bg-brand-gradient text-primary-foreground">{(f.full_name || "K").slice(0, 2)}</AvatarFallback></Avatar>
+                        <div className="flex items-center gap-1">
+                          <p className="font-semibold text-sm">{f.full_name}</p>
+                          {f.verified && <VerifiedBadge style={(f.verified_style as any) || "brand"} size={12} />}
+                        </div>
+                        <p className="text-xs text-muted-foreground">@{f.username}</p>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="more" className="mt-4 px-2 sm:px-0 pb-6">
+              <Card className="p-6 shadow-card text-center text-muted-foreground">المزيد قريباً</Card>
+            </TabsContent>
+
+            <TabsContent value="about" className="mt-4 px-2 sm:px-0 pb-6">
+              <Card className="p-8 shadow-card space-y-3">
+                <h3 className="font-bold text-lg">نبذة</h3>
+                <p className="text-sm text-muted-foreground">{profile.bio || "لا توجد نبذة بعد. اضغط على \"تعديل\" لإضافة واحدة."}</p>
+                <div className="grid sm:grid-cols-2 gap-3 pt-3 text-sm">
+                  <div className="flex items-center gap-2"><Briefcase className="h-4 w-4 text-muted-foreground" />يعمل في KAIAN</div>
+                  <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" />يعيش في الرياض</div>
+                </div>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </Card>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
