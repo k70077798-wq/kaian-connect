@@ -47,6 +47,13 @@ export function Sidebar() {
           <span>الملف الشخصي</span>
         </button>
 
+        <button onClick={() => navigate({ to: "/settings" })} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-muted transition-colors">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent text-primary">
+            <Settings className="h-4 w-4" />
+          </div>
+          <span>الإعدادات</span>
+        </button>
+
         <button onClick={toggle} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-muted transition-colors">
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent text-primary">
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -58,3 +65,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

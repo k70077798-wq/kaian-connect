@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Users, FileText, Megaphone, Flag, UsersRound, ShieldCheck, Ban, CheckCircle2, Search, TrendingUp } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/admin")({ component: AdminPage });
@@ -49,10 +50,18 @@ function AdminPage() {
   useEffect(() => { if (isAdmin) refresh(); }, [isAdmin]);
 
   const toggleVerify = async (id: string, current: boolean) => {
-    await supabase.from("profiles").update({ verified: !current }).eq("id", id);
+    const { error } = await supabase.from("profiles").update({ verified: !current }).eq("id", id);
+    if (error) return toast.error("فشل: " + error.message);
     toast.success(current ? "تم إلغاء التوثيق" : "تم توثيق الحساب");
     refresh();
   };
+  const setVerifyStyle = async (id: string, style: "brand" | "gold") => {
+    const { error } = await supabase.from("profiles").update({ verified_style: style, verified: true }).eq("id", id);
+    if (error) return toast.error("فشل: " + error.message);
+    toast.success(style === "gold" ? "تم تعيين التوثيق الذهبي" : "تم تعيين التوثيق الرسمي");
+    refresh();
+  };
+
   const toggleBan = async (id: string, current: boolean) => {
     await supabase.from("profiles").update({ is_banned: !current }).eq("id", id);
     toast.success(current ? "تم رفع الحظر" : "تم حظر المستخدم");
@@ -139,7 +148,7 @@ function AdminPage() {
                             <AvatarFallback className="bg-brand-gradient text-primary-foreground text-xs">{(u.full_name || "K").slice(0,2).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <span className="font-semibold">{u.full_name || "—"}</span>
-                          {u.verified && <span className="text-primary">✓</span>}
+                          {u.verified && <VerifiedBadge style={(u.verified_style as any) || "brand"} size={14} />}
                         </div>
                       </td>
                       <td className="py-3 px-2 text-muted-foreground">@{u.username}</td>
@@ -147,9 +156,15 @@ function AdminPage() {
                         {u.is_banned ? <Badge variant="destructive">محظور</Badge> : <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-0">نشط</Badge>}
                       </td>
                       <td className="py-3 px-2">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button size="sm" variant="outline" onClick={() => toggleVerify(u.id, !!u.verified)}>
-                            <CheckCircle2 className="h-3 w-3 ms-1" />{u.verified ? "إلغاء التوثيق" : "توثيق"}
+                            <CheckCircle2 className="h-3 w-3 ms-1" />{u.verified ? "إلغاء" : "توثيق"}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setVerifyStyle(u.id, "brand")} className="gap-1">
+                            <VerifiedBadge style="brand" size={12} />رسمي
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setVerifyStyle(u.id, "gold")} className="gap-1">
+                            <VerifiedBadge style="gold" size={12} />ذهبي
                           </Button>
                           <Button size="sm" variant={u.is_banned ? "outline" : "destructive"} onClick={() => toggleBan(u.id, !!u.is_banned)}>
                             <Ban className="h-3 w-3 ms-1" />{u.is_banned ? "رفع الحظر" : "حظر"}
