@@ -123,7 +123,34 @@
   }
 }
 
+/* Blue (Facebook-like) color scheme override */
+:root[data-color="blue"] {
+  --primary: oklch(0.55 0.20 255);
+  --primary-glow: oklch(0.65 0.19 255);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.95 0.04 255);
+  --accent-foreground: oklch(0.30 0.10 255);
+  --ring: oklch(0.55 0.20 255);
+  --sidebar-primary: oklch(0.55 0.20 255);
+  --sidebar-ring: oklch(0.55 0.20 255);
+  --gradient-brand: linear-gradient(135deg, oklch(0.55 0.20 255), oklch(0.40 0.18 260));
+  --shadow-elegant: 0 10px 40px -12px oklch(0.55 0.20 255 / 0.30);
+}
+:root[data-color="blue"].dark,
+.dark[data-color="blue"] {
+  --primary: oklch(0.65 0.19 255);
+  --primary-glow: oklch(0.72 0.18 255);
+  --accent: oklch(0.28 0.08 255);
+  --ring: oklch(0.65 0.19 255);
+  --gradient-brand: linear-gradient(135deg, oklch(0.65 0.19 255), oklch(0.30 0.08 260));
+}
+
 .bg-brand-gradient { background-image: var(--gradient-brand); }
 .bg-soft-gradient { background-image: var(--gradient-soft); }
 .shadow-elegant { box-shadow: var(--shadow-elegant); }
 .shadow-card { box-shadow: var(--shadow-card); }
+
+/* Verified badge */
+.verified-gold { color: #f5c518; filter: drop-shadow(0 0 2px rgba(245,197,24,.45)); }
+.verified-brand { color: var(--primary); }
+
