@@ -39,9 +39,10 @@ export function AddFriendButton({ userId, size = "sm", variant = "default", clas
   useEffect(() => {
     refresh();
     if (!user) return;
-    const ch = supabase.channel(`afb-${userId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => refresh())
-      .subscribe();
+    const ch = supabase
+      .channel(`afb-${userId}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => refresh());
+    ch.subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user?.id, userId]);
 
