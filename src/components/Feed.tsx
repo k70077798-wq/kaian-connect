@@ -411,14 +411,19 @@ export function Feed() {
             <Card className="p-4 shadow-card">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-11 w-11">
-                    <AvatarImage src={post.profile?.avatar_url ?? undefined} />
-                    <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials(post.profile?.full_name)}</AvatarFallback>
-                  </Avatar>
+                  <Link to="/profile/$userId" params={{ userId: post.user_id }}>
+                    <Avatar className="h-11 w-11 hover:opacity-80 transition">
+                      <AvatarImage src={post.profile?.avatar_url ?? undefined} />
+                      <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials(post.profile?.full_name)}</AvatarFallback>
+                    </Avatar>
+                  </Link>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-bold text-sm">{post.profile?.full_name || "مستخدم"}</p>
+                      <Link to="/profile/$userId" params={{ userId: post.user_id }} className="font-bold text-sm hover:underline">
+                        {post.profile?.full_name || "مستخدم"}
+                      </Link>
                       {post.profile?.verified && <span className="text-primary text-xs">✓</span>}
+                      {post.user_id !== user?.id && <AddFriendButton userId={post.user_id} compact size="sm" className="h-6 px-2 text-[11px]" />}
                       {post.feeling && <span className="text-xs text-muted-foreground">— يشعر بـ {post.feeling}</span>}
                       {post.is_live && <span className="rounded bg-red-600 text-white text-[10px] px-1.5 py-0.5 animate-pulse">🔴 مباشر</span>}
                     </div>
