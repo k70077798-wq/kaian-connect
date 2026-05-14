@@ -20,6 +20,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { StoryViewer } from "@/components/StoryViewer";
 import { ReelsStrip } from "@/components/ReelsStrip";
+import { AddFriendButton } from "@/components/AddFriendButton";
+import { Link } from "@tanstack/react-router";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
 interface Post {
