@@ -22,6 +22,7 @@ import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppGroupsRouteImport } from './routes/_app/groups'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
+import { Route as AppProfileUserIdRouteImport } from './routes/_app/profile.$userId'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -87,6 +88,11 @@ const AppAdminRoute = AppAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProfileUserIdRoute = AppProfileUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AppProfileRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -98,9 +104,10 @@ export interface FileRoutesByFullPath {
   '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
   '/pages': typeof AppPagesRoute
-  '/profile': typeof AppProfileRoute
+  '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
   '/settings': typeof AppSettingsRoute
+  '/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -112,9 +119,10 @@ export interface FileRoutesByTo {
   '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
   '/pages': typeof AppPagesRoute
-  '/profile': typeof AppProfileRoute
+  '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
   '/settings': typeof AppSettingsRoute
+  '/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -128,9 +136,10 @@ export interface FileRoutesById {
   '/_app/messages': typeof AppMessagesRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/pages': typeof AppPagesRoute
-  '/_app/profile': typeof AppProfileRoute
+  '/_app/profile': typeof AppProfileRouteWithChildren
   '/_app/reels': typeof AppReelsRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reels'
     | '/settings'
+    | '/profile/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reels'
     | '/settings'
+    | '/profile/$userId'
   id:
     | '__root__'
     | '/'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_app/reels'
     | '/_app/settings'
+    | '/_app/profile/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -277,8 +289,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profile/$userId': {
+      id: '/_app/profile/$userId'
+      path: '/$userId'
+      fullPath: '/profile/$userId'
+      preLoaderRoute: typeof AppProfileUserIdRouteImport
+      parentRoute: typeof AppProfileRoute
+    }
   }
 }
+
+interface AppProfileRouteChildren {
+  AppProfileUserIdRoute: typeof AppProfileUserIdRoute
+}
+
+const AppProfileRouteChildren: AppProfileRouteChildren = {
+  AppProfileUserIdRoute: AppProfileUserIdRoute,
+}
+
+const AppProfileRouteWithChildren = AppProfileRoute._addFileChildren(
+  AppProfileRouteChildren,
+)
 
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
@@ -288,7 +319,7 @@ interface AppRouteChildren {
   AppMessagesRoute: typeof AppMessagesRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPagesRoute: typeof AppPagesRoute
-  AppProfileRoute: typeof AppProfileRoute
+  AppProfileRoute: typeof AppProfileRouteWithChildren
   AppReelsRoute: typeof AppReelsRoute
   AppSettingsRoute: typeof AppSettingsRoute
 }
@@ -301,7 +332,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMessagesRoute: AppMessagesRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppPagesRoute: AppPagesRoute,
-  AppProfileRoute: AppProfileRoute,
+  AppProfileRoute: AppProfileRouteWithChildren,
   AppReelsRoute: AppReelsRoute,
   AppSettingsRoute: AppSettingsRoute,
 }

@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, Home, MessageCircle, Search, LogOut, User as UserIcon, Shield, Users, Image as ImageIcon, Clapperboard } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Bell, Home, MessageCircle, Search, LogOut, User as UserIcon, Shield, Users, Image as ImageIcon, Clapperboard, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+interface SearchResult { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
 
 export function Navbar() {
   const { user, isAdmin, signOut } = useAuth();
@@ -14,6 +16,12 @@ export function Navbar() {
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
   const [unread, setUnread] = useState(0);
   const [pendingFriends, setPendingFriends] = useState(0);
+
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [openSearch, setOpenSearch] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -35,7 +43,34 @@ export function Navbar() {
     return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!q.trim()) { setResults([]); setSearching(false); return; }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      const { data } = await supabase.from("profiles")
+        .select("id, full_name, username, avatar_url, verified")
+        .or(`full_name.ilike.%${q}%,username.ilike.%${q}%`)
+        .neq("id", user?.id || "")
+        .limit(8);
+      setResults((data || []) as SearchResult[]);
+      setSearching(false);
+    }, 220);
+    return () => clearTimeout(t);
+  }, [q, user?.id]);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setOpenSearch(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
   const initials = (profile?.full_name || user?.email || "K").slice(0, 2).toUpperCase();
+  const goToProfile = (id: string) => {
+    navigate({ to: "/profile/$userId", params: { userId: id } });
+    setOpenSearch(false); setQ("");
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-card/80 backdrop-blur-xl shadow-card">
@@ -47,9 +82,44 @@ export function Navbar() {
           </span>
         </Link>
 
-        <div className="relative mx-2 hidden flex-1 max-w-md md:block">
+        <div ref={searchRef} className="relative mx-2 hidden flex-1 max-w-md md:block">
           <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="h-10 rounded-full bg-muted/60 pr-10 border-0" placeholder="ابحث عن أصدقاء، صفحات، مجموعات..." />
+          <Input
+            value={q}
+            onChange={e => { setQ(e.target.value); setOpenSearch(true); }}
+            onFocus={() => setOpenSearch(true)}
+            className="h-10 rounded-full bg-muted/60 pr-10 border-0"
+            placeholder="ابحث عن أصدقاء بالاسم أو اسم المستخدم..."
+          />
+          {openSearch && q.trim() && (
+            <div className="absolute top-full mt-2 w-full rounded-xl border bg-popover shadow-elegant overflow-hidden z-50">
+              {searching ? (
+                <div className="p-4 text-center text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline" /> جاري البحث...</div>
+              ) : results.length === 0 ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">لا توجد نتائج</div>
+              ) : (
+                <ul className="max-h-96 overflow-y-auto">
+                  {results.map(r => (
+                    <li key={r.id}>
+                      <button onClick={() => goToProfile(r.id)} className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted text-right transition-colors">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={r.avatar_url ?? undefined} />
+                          <AvatarFallback className="bg-brand-gradient text-primary-foreground text-sm">{(r.full_name || "K").slice(0, 2)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0 text-right">
+                          <p className="font-bold text-sm truncate flex items-center gap-1">
+                            {r.full_name || "مستخدم"}
+                            {r.verified && <span className="text-primary">✓</span>}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">@{r.username || "—"}</p>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         <nav className="flex items-center gap-1 mx-auto">
