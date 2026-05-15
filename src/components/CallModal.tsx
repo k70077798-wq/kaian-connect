@@ -54,7 +54,7 @@ export function CallModal({ conversationId, peerId, peerName, kind, initiator, o
       if (initiator) {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        await send("offer", { sdp: offer.sdp, type: offer.type });
+        await send("offer", { sdp: offer.sdp, type: offer.type, video: kind === "video" });
       }
     };
 
