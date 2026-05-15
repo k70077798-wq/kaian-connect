@@ -47,7 +47,7 @@ function MessagesPage() {
   const [foundUsers, setFoundUsers] = useState<Profile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
-  const [call, setCall] = useState<{ peer: string; peerName: string; kind: "audio" | "video"; initiator: boolean } | null>(null);
+  const [call, setCall] = useState<{ peer: string; peerName: string; kind: "audio" | "video"; initiator: boolean; initialOffer?: any; conversationId: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -107,7 +107,7 @@ function MessagesPage() {
           const sig: any = p.new;
           if (sig.kind === "offer" && !call) {
             const peerName = profiles[sig.from_user]?.full_name || profiles[sig.from_user]?.username || "مكالمة";
-            setCall({ peer: sig.from_user, peerName, kind: sig.payload?.video ? "video" : "audio", initiator: false });
+            setCall({ peer: sig.from_user, peerName, kind: sig.payload?.video ? "video" : "audio", initiator: false, initialOffer: sig.payload, conversationId: sig.conversation_id });
           }
         });
     ch.subscribe();
@@ -185,7 +185,7 @@ function MessagesPage() {
 
   const startCall = async (kind: "audio" | "video") => {
     if (!user || !activePeer) return;
-    setCall({ peer: activePeer.id, peerName: activePeer.full_name || activePeer.username || "مستخدم", kind, initiator: true });
+    setCall({ peer: activePeer.id, peerName: activePeer.full_name || activePeer.username || "مستخدم", kind, initiator: true, conversationId: activeId! });
   };
 
   const forwardTo = async (targetConvId: string) => {
