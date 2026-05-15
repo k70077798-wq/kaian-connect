@@ -50,6 +50,106 @@ export type Database = {
         }
         Relationships: []
       }
+      call_signals: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          from_user: string
+          id: string
+          kind: string
+          payload: Json | null
+          to_user: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          from_user: string
+          id?: string
+          kind: string
+          payload?: Json | null
+          to_user: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          from_user?: string
+          id?: string
+          kind?: string
+          payload?: Json | null
+          to_user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_signals_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_members: {
+        Row: {
+          conversation_id: string
+          id: string
+          joined_at: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string
+          id: string
+          is_group: boolean
+          last_message_at: string
+          title: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_group?: boolean
+          last_message_at?: string
+          title?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_group?: boolean
+          last_message_at?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -103,6 +203,75 @@ export type Database = {
           privacy?: string
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          call_duration: number | null
+          call_kind: string | null
+          call_status: string | null
+          content: string | null
+          conversation_id: string
+          created_at: string
+          deleted: boolean
+          edited_at: string | null
+          file_name: string | null
+          forwarded_from: string | null
+          id: string
+          media_type: string | null
+          media_url: string | null
+          reply_to: string | null
+          sender_id: string
+        }
+        Insert: {
+          call_duration?: number | null
+          call_kind?: string | null
+          call_status?: string | null
+          content?: string | null
+          conversation_id: string
+          created_at?: string
+          deleted?: boolean
+          edited_at?: string | null
+          file_name?: string | null
+          forwarded_from?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          reply_to?: string | null
+          sender_id: string
+        }
+        Update: {
+          call_duration?: number | null
+          call_kind?: string | null
+          call_status?: string | null
+          content?: string | null
+          conversation_id?: string
+          created_at?: string
+          deleted?: boolean
+          edited_at?: string | null
+          file_name?: string | null
+          forwarded_from?: string | null
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          reply_to?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -364,6 +533,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_conversation_member: {
+        Args: { _conv: string; _user: string }
         Returns: boolean
       }
     }
