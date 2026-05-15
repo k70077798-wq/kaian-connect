@@ -388,13 +388,14 @@ function MessagesPage() {
         </DialogContent>
       </Dialog>
 
-      {call && activeId && (
+      {call && (
         <CallModal
-          conversationId={activeId}
+          conversationId={call.conversationId}
           peerId={call.peer}
           peerName={call.peerName}
           kind={call.kind}
           initiator={call.initiator}
+          initialOffer={call.initialOffer}
           onClose={() => setCall(null)}
         />
       )}
