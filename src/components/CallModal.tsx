@@ -12,10 +12,11 @@ type Props = {
   peerName: string;
   kind: "audio" | "video";
   initiator: boolean;
+  initialOffer?: any;
   onClose: () => void;
 };
 
-export function CallModal({ conversationId, peerId, peerName, kind, initiator, onClose }: Props) {
+export function CallModal({ conversationId, peerId, peerName, kind, initiator, initialOffer, onClose }: Props) {
   const { user } = useAuth();
   const localRef = useRef<HTMLVideoElement>(null);
   const remoteRef = useRef<HTMLVideoElement>(null);
@@ -55,6 +56,11 @@ export function CallModal({ conversationId, peerId, peerName, kind, initiator, o
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         await send("offer", { sdp: offer.sdp, type: offer.type, video: kind === "video" });
+      } else if (initialOffer) {
+        await pc.setRemoteDescription(new RTCSessionDescription(initialOffer));
+        const ans = await pc.createAnswer();
+        await pc.setLocalDescription(ans);
+        await send("answer", { sdp: ans.sdp, type: ans.type });
       }
     };
 
