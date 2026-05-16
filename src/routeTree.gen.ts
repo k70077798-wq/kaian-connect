@@ -23,6 +23,7 @@ import { Route as AppGroupsRouteImport } from './routes/_app/groups'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppProfileUserIdRouteImport } from './routes/_app/profile.$userId'
+import { Route as AppPagesPageIdRouteImport } from './routes/_app/pages.$pageId'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -93,6 +94,11 @@ const AppProfileUserIdRoute = AppProfileUserIdRouteImport.update({
   path: '/$userId',
   getParentRoute: () => AppProfileRoute,
 } as any)
+const AppPagesPageIdRoute = AppPagesPageIdRouteImport.update({
+  id: '/$pageId',
+  path: '/$pageId',
+  getParentRoute: () => AppPagesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,10 +109,11 @@ export interface FileRoutesByFullPath {
   '/home': typeof AppHomeRoute
   '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
-  '/pages': typeof AppPagesRoute
+  '/pages': typeof AppPagesRouteWithChildren
   '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
   '/settings': typeof AppSettingsRoute
+  '/pages/$pageId': typeof AppPagesPageIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRoutesByTo {
@@ -118,10 +125,11 @@ export interface FileRoutesByTo {
   '/home': typeof AppHomeRoute
   '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
-  '/pages': typeof AppPagesRoute
+  '/pages': typeof AppPagesRouteWithChildren
   '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
   '/settings': typeof AppSettingsRoute
+  '/pages/$pageId': typeof AppPagesPageIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRoutesById {
@@ -135,10 +143,11 @@ export interface FileRoutesById {
   '/_app/home': typeof AppHomeRoute
   '/_app/messages': typeof AppMessagesRoute
   '/_app/notifications': typeof AppNotificationsRoute
-  '/_app/pages': typeof AppPagesRoute
+  '/_app/pages': typeof AppPagesRouteWithChildren
   '/_app/profile': typeof AppProfileRouteWithChildren
   '/_app/reels': typeof AppReelsRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/pages/$pageId': typeof AppPagesPageIdRoute
   '/_app/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRouteTypes {
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reels'
     | '/settings'
+    | '/pages/$pageId'
     | '/profile/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reels'
     | '/settings'
+    | '/pages/$pageId'
     | '/profile/$userId'
   id:
     | '__root__'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_app/reels'
     | '/_app/settings'
+    | '/_app/pages/$pageId'
     | '/_app/profile/$userId'
   fileRoutesById: FileRoutesById
 }
@@ -296,8 +308,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileUserIdRouteImport
       parentRoute: typeof AppProfileRoute
     }
+    '/_app/pages/$pageId': {
+      id: '/_app/pages/$pageId'
+      path: '/$pageId'
+      fullPath: '/pages/$pageId'
+      preLoaderRoute: typeof AppPagesPageIdRouteImport
+      parentRoute: typeof AppPagesRoute
+    }
   }
 }
+
+interface AppPagesRouteChildren {
+  AppPagesPageIdRoute: typeof AppPagesPageIdRoute
+}
+
+const AppPagesRouteChildren: AppPagesRouteChildren = {
+  AppPagesPageIdRoute: AppPagesPageIdRoute,
+}
+
+const AppPagesRouteWithChildren = AppPagesRoute._addFileChildren(
+  AppPagesRouteChildren,
+)
 
 interface AppProfileRouteChildren {
   AppProfileUserIdRoute: typeof AppProfileUserIdRoute
@@ -318,7 +349,7 @@ interface AppRouteChildren {
   AppHomeRoute: typeof AppHomeRoute
   AppMessagesRoute: typeof AppMessagesRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
-  AppPagesRoute: typeof AppPagesRoute
+  AppPagesRoute: typeof AppPagesRouteWithChildren
   AppProfileRoute: typeof AppProfileRouteWithChildren
   AppReelsRoute: typeof AppReelsRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -331,7 +362,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppHomeRoute: AppHomeRoute,
   AppMessagesRoute: AppMessagesRoute,
   AppNotificationsRoute: AppNotificationsRoute,
-  AppPagesRoute: AppPagesRoute,
+  AppPagesRoute: AppPagesRouteWithChildren,
   AppProfileRoute: AppProfileRouteWithChildren,
   AppReelsRoute: AppReelsRoute,
   AppSettingsRoute: AppSettingsRoute,
