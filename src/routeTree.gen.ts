@@ -24,7 +24,6 @@ import { Route as AppFriendsRouteImport } from './routes/_app/friends'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppProfileUserIdRouteImport } from './routes/_app/profile.$userId'
 import { Route as AppPagesPageIdRouteImport } from './routes/_app/pages.$pageId'
-import { Route as AppPagesPageIdRouteImport } from './routes/_app/pages.$pageId'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -94,6 +93,11 @@ const AppProfileUserIdRoute = AppProfileUserIdRouteImport.update({
   id: '/$userId',
   path: '/$userId',
   getParentRoute: () => AppProfileRoute,
+} as any)
+const AppPagesPageIdRoute = AppPagesPageIdRouteImport.update({
+  id: '/$pageId',
+  path: '/$pageId',
+  getParentRoute: () => AppPagesRoute,
 } as any)
 const AppPagesPageIdRoute = AppPagesPageIdRouteImport.update({
   id: '/$pageId',
