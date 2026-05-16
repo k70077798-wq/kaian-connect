@@ -99,11 +99,6 @@ const AppPagesPageIdRoute = AppPagesPageIdRouteImport.update({
   path: '/$pageId',
   getParentRoute: () => AppPagesRoute,
 } as any)
-const AppPagesPageIdRoute = AppPagesPageIdRouteImport.update({
-  id: '/$pageId',
-  path: '/$pageId',
-  getParentRoute: () => AppPagesRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -120,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
+  '/pages/$pageId': typeof AppPagesPageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
