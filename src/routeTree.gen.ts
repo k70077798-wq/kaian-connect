@@ -115,7 +115,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
-  '/pages/$pageId': typeof AppPagesPageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
