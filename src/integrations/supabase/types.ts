@@ -303,30 +303,68 @@ export type Database = {
         }
         Relationships: []
       }
+      page_followers: {
+        Row: {
+          created_at: string
+          id: string
+          page_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_followers_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pages: {
         Row: {
           avatar_url: string | null
+          category: string | null
+          cover_url: string | null
           created_at: string
           description: string | null
           id: string
           name: string
           owner_id: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          category?: string | null
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name: string
           owner_id: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          category?: string | null
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name?: string
           owner_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -403,6 +441,7 @@ export type Database = {
           image_url: string | null
           is_live: boolean
           media_type: string | null
+          page_id: string | null
           shares_count: number
           user_id: string
           video_url: string | null
@@ -416,6 +455,7 @@ export type Database = {
           image_url?: string | null
           is_live?: boolean
           media_type?: string | null
+          page_id?: string | null
           shares_count?: number
           user_id: string
           video_url?: string | null
@@ -429,12 +469,21 @@ export type Database = {
           image_url?: string | null
           is_live?: boolean
           media_type?: string | null
+          page_id?: string | null
           shares_count?: number
           user_id?: string
           video_url?: string | null
           youtube_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "posts_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
