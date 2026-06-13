@@ -434,42 +434,51 @@ export type Database = {
       }
       posts: {
         Row: {
+          background: string | null
           content: string | null
           created_at: string
           feeling: string | null
           id: string
           image_url: string | null
           is_live: boolean
+          location: string | null
           media_type: string | null
           page_id: string | null
+          privacy: string
           shares_count: number
           user_id: string
           video_url: string | null
           youtube_url: string | null
         }
         Insert: {
+          background?: string | null
           content?: string | null
           created_at?: string
           feeling?: string | null
           id?: string
           image_url?: string | null
           is_live?: boolean
+          location?: string | null
           media_type?: string | null
           page_id?: string | null
+          privacy?: string
           shares_count?: number
           user_id: string
           video_url?: string | null
           youtube_url?: string | null
         }
         Update: {
+          background?: string | null
           content?: string | null
           created_at?: string
           feeling?: string | null
           id?: string
           image_url?: string | null
           is_live?: boolean
+          location?: string | null
           media_type?: string | null
           page_id?: string | null
+          privacy?: string
           shares_count?: number
           user_id?: string
           video_url?: string | null

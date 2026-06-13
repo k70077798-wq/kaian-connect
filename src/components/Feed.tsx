@@ -22,12 +22,15 @@ import { StoryViewer } from "@/components/StoryViewer";
 import { ReelsStrip } from "@/components/ReelsStrip";
 import { AddFriendButton } from "@/components/AddFriendButton";
 import { Link } from "@tanstack/react-router";
+import { PostComposer, backgroundStyle } from "@/components/PostComposer";
+import { Globe, Users as UsersIcon, Lock, MapPin } from "lucide-react";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
 interface Post {
   id: string; user_id: string; content: string | null; image_url: string | null;
   video_url: string | null; youtube_url: string | null; media_type: string | null;
   feeling: string | null; is_live: boolean | null; shares_count: number | null;
+  background: string | null; privacy: string | null; location: string | null;
   created_at: string;
   profile?: Profile;
   likes_count: number; comments_count: number; liked_by_me: boolean;
@@ -290,89 +293,13 @@ export function Feed() {
 
   return (
     <div className="space-y-4">
-      {/* hidden inputs */}
-      <input ref={imgRef} type="file" accept="image/*" hidden onChange={e => onFile(e.target.files?.[0] || null, "image")} />
-      <input ref={vidRef} type="file" accept="video/*" hidden onChange={e => onFile(e.target.files?.[0] || null, "video")} />
-
       {/* Composer */}
-      <Card className="p-4 shadow-card">
-        <div className="flex gap-3">
-          <Avatar className="h-11 w-11">
-            <AvatarImage src={myProfile?.avatar_url ?? undefined} />
-            <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials(myProfile?.full_name)}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <Textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder={feeling ? `تشعر بـ ${feeling}...` : "ماذا يدور في بالك؟"}
-              className="min-h-[60px] resize-none border-0 bg-muted/50 rounded-2xl focus-visible:ring-1"
-            />
-            {feeling && (
-              <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs">
-                <span>تشعر بـ {feeling}</span>
-                <button onClick={() => setFeeling(null)}><X className="h-3 w-3" /></button>
-              </div>
-            )}
-          </div>
-        </div>
+      <PostComposer
+        myProfile={myProfile}
+        onStartLive={startLive}
+        onOpenStory={() => setStoryOpen(true)}
+      />
 
-        {showYoutube && (
-          <div className="mt-3 flex gap-2">
-            <Input value={youtubeInput} onChange={e => setYoutubeInput(e.target.value)} placeholder="ألصق رابط يوتيوب هنا..." />
-            <Button variant="ghost" size="icon" onClick={() => { setShowYoutube(false); setYoutubeInput(""); }}><X className="h-4 w-4" /></Button>
-          </div>
-        )}
-
-        {mediaPreview && (
-          <div className="relative mt-3 rounded-xl overflow-hidden border">
-            {mediaType === "image" ? (
-              <img src={mediaPreview} className="max-h-80 w-full object-cover" alt="" />
-            ) : (
-              <video src={mediaPreview} controls className="max-h-80 w-full" />
-            )}
-            <Button size="icon" variant="secondary" className="absolute top-2 left-2 rounded-full" onClick={clearMedia}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-
-        {youtubeInput && extractYoutubeId(youtubeInput) && (
-          <div className="mt-3 aspect-video w-full rounded-xl overflow-hidden">
-            <iframe className="h-full w-full" src={`https://www.youtube.com/embed/${extractYoutubeId(youtubeInput)}`} allowFullScreen />
-          </div>
-        )}
-
-        {publishing && (
-          <div className="mt-3"><Progress value={66} className="h-1.5" /></div>
-        )}
-
-        <div className="mt-3 flex items-center justify-between border-t pt-3 flex-wrap gap-2">
-          <div className="flex flex-wrap gap-1">
-            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={pickImage}><ImageIcon className="h-4 w-4 text-green-600" />صورة</Button>
-            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={pickVideo}><Video className="h-4 w-4 text-blue-600" />فيديو</Button>
-            <Button variant="ghost" size="sm" disabled={publishing} className="gap-2" onClick={() => setShowYoutube(s => !s)}><Youtube className="h-4 w-4 text-red-600" />يوتيوب</Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2"><Smile className="h-4 w-4 text-yellow-500" />شعور</Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64">
-                <div className="grid grid-cols-3 gap-2">
-                  {FEELINGS.map(f => (
-                    <button key={f.t} onClick={() => setFeeling(`${f.e} ${f.t}`)} className="flex flex-col items-center gap-1 rounded-lg p-2 hover:bg-muted">
-                      <span className="text-2xl">{f.e}</span><span className="text-xs">{f.t}</span>
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Button variant="ghost" size="sm" className="gap-2" onClick={startLive}><Radio className="h-4 w-4 text-red-500" />بث مباشر</Button>
-          </div>
-          <Button onClick={publish} disabled={publishing} className="rounded-full bg-brand-gradient px-6 font-bold shadow-elegant">
-            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4 ms-2" />نشر</>}
-          </Button>
-        </div>
-      </Card>
 
       {/* Stories strip */}
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
@@ -425,10 +352,13 @@ export function Feed() {
                       {post.profile?.verified && <span className="text-primary text-xs">✓</span>}
                       {post.user_id !== user?.id && <AddFriendButton userId={post.user_id} compact size="sm" className="h-6 px-2 text-[11px]" />}
                       {post.feeling && <span className="text-xs text-muted-foreground">— يشعر بـ {post.feeling}</span>}
+                      {post.location && <span className="text-xs text-muted-foreground inline-flex items-center gap-0.5">— <MapPin className="h-3 w-3" />{post.location}</span>}
                       {post.is_live && <span className="rounded bg-red-600 text-white text-[10px] px-1.5 py-0.5 animate-pulse">🔴 مباشر</span>}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
                       {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ar })}
+                      <span>·</span>
+                      {post.privacy === "only_me" ? <Lock className="h-3 w-3" /> : post.privacy === "friends" ? <UsersIcon className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
                     </p>
                   </div>
                 </div>
@@ -451,7 +381,18 @@ export function Feed() {
                 </DropdownMenu>
               </div>
 
-              {post.content && <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>}
+              {post.content && (
+                post.background && !post.image_url && !post.video_url && !post.youtube_url ? (
+                  <div
+                    className="mt-3 rounded-xl min-h-[220px] flex items-center justify-center p-6 text-center text-2xl font-bold whitespace-pre-wrap break-words"
+                    style={backgroundStyle(post.background) ?? undefined}
+                  >
+                    {post.content}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                )
+              )}
               {post.image_url && <img src={post.image_url} className="mt-3 w-full rounded-xl" alt="" />}
               {post.video_url && <video src={post.video_url} controls className="mt-3 w-full rounded-xl" />}
               {post.youtube_url && (

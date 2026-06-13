@@ -1,0 +1,3 @@
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS background TEXT;
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS privacy TEXT NOT NULL DEFAULT 'public';
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS location TEXT;
