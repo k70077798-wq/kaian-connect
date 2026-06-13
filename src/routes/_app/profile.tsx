@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { Pencil, MapPin, Home as HomeIcon, Heart, Camera, Loader2, LayoutGrid, List as ListIcon, Filter, Settings2, Link2, Briefcase, MoreHorizontal, ChevronDown, BarChart3 } from "lucide-react";
+import { PostComposer } from "@/components/PostComposer";
+import { UserPostsList } from "@/components/UserPostsList";
+import { Pencil, MapPin, Home as HomeIcon, Heart, Camera, Loader2, LayoutGrid, List as ListIcon, Filter, Settings2, Link2, Briefcase, ChevronDown, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/profile")({ component: ProfilePage });
