@@ -352,10 +352,13 @@ export function Feed() {
                       {post.profile?.verified && <span className="text-primary text-xs">✓</span>}
                       {post.user_id !== user?.id && <AddFriendButton userId={post.user_id} compact size="sm" className="h-6 px-2 text-[11px]" />}
                       {post.feeling && <span className="text-xs text-muted-foreground">— يشعر بـ {post.feeling}</span>}
+                      {post.location && <span className="text-xs text-muted-foreground inline-flex items-center gap-0.5">— <MapPin className="h-3 w-3" />{post.location}</span>}
                       {post.is_live && <span className="rounded bg-red-600 text-white text-[10px] px-1.5 py-0.5 animate-pulse">🔴 مباشر</span>}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
                       {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ar })}
+                      <span>·</span>
+                      {post.privacy === "only_me" ? <Lock className="h-3 w-3" /> : post.privacy === "friends" ? <UsersIcon className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
                     </p>
                   </div>
                 </div>
