@@ -381,7 +381,18 @@ export function Feed() {
                 </DropdownMenu>
               </div>
 
-              {post.content && <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>}
+              {post.content && (
+                post.background && !post.image_url && !post.video_url && !post.youtube_url ? (
+                  <div
+                    className="mt-3 rounded-xl min-h-[220px] flex items-center justify-center p-6 text-center text-2xl font-bold whitespace-pre-wrap break-words"
+                    style={backgroundStyle(post.background) ?? undefined}
+                  >
+                    {post.content}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                )
+              )}
               {post.image_url && <img src={post.image_url} className="mt-3 w-full rounded-xl" alt="" />}
               {post.video_url && <video src={post.video_url} controls className="mt-3 w-full rounded-xl" />}
               {post.youtube_url && (
