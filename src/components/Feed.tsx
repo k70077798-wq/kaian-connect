@@ -30,6 +30,7 @@ interface Post {
   id: string; user_id: string; content: string | null; image_url: string | null;
   video_url: string | null; youtube_url: string | null; media_type: string | null;
   feeling: string | null; is_live: boolean | null; shares_count: number | null;
+  background: string | null; privacy: string | null; location: string | null;
   created_at: string;
   profile?: Profile;
   likes_count: number; comments_count: number; liked_by_me: boolean;
