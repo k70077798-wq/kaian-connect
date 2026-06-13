@@ -243,24 +243,12 @@ function ProfilePage() {
 
               {/* Main column */}
               <div className="space-y-4 order-1 lg:order-2">
-                {/* Composer */}
-                <Card className="p-3 shadow-card">
-                  <div className="flex items-center gap-3 px-1">
-                    <Avatar className="h-10 w-10"><AvatarImage src={profile.avatar_url ?? undefined} /><AvatarFallback className="bg-brand-gradient text-primary-foreground">{initials}</AvatarFallback></Avatar>
-                    <button className="flex-1 text-right rounded-full bg-muted hover:bg-muted/70 px-4 py-2.5 text-sm text-muted-foreground">بم تفكر؟</button>
-                  </div>
-                  <div className="mt-2 grid grid-cols-3 border-t pt-2 text-xs sm:text-sm">
-                    <button className="flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-muted">
-                      <span className="text-rose-500">●</span> فيديو بث مباشر
-                    </button>
-                    <button className="flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-muted">
-                      <span className="text-emerald-500">🖼</span> صورة/فيديو
-                    </button>
-                    <button className="flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-muted">
-                      <span className="text-violet-500">▶</span> مقطع ريلز
-                    </button>
-                  </div>
-                </Card>
+                {/* Composer (same as home) */}
+                <PostComposer
+                  myProfile={profile}
+                  onStartLive={() => toast.info("ابدأ البث من الصفحة الرئيسية")}
+                  onOpenStory={() => toast.info("ابدأ القصة من الصفحة الرئيسية")}
+                />
 
                 {/* Posts header */}
                 <Card className="p-4 shadow-card">
@@ -281,47 +269,7 @@ function ProfilePage() {
                   </div>
                 </Card>
 
-                {/* Posts */}
-                {posts.length === 0 && <Card className="p-12 text-center text-muted-foreground shadow-card">لا توجد منشورات بعد</Card>}
-                {view === "list" ? (
-                  <div className="space-y-4">
-                    {posts.map(p => (
-                      <Card key={p.id} className="p-4 shadow-card">
-                        <div className="flex items-start gap-3">
-                          <Avatar className="h-10 w-10"><AvatarImage src={profile.avatar_url ?? undefined} /><AvatarFallback className="bg-brand-gradient text-primary-foreground">{initials}</AvatarFallback></Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-bold text-sm">{profile.full_name}</span>
-                              {profile.verified && <VerifiedBadge style={vStyle} size={14} />}
-                            </div>
-                            <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleString("ar")}</p>
-                          </div>
-                          <button onClick={() => deletePost(p.id)} className="text-muted-foreground hover:text-destructive p-1.5 rounded-full hover:bg-muted" aria-label="خيارات">
-                            <MoreHorizontal className="h-5 w-5" />
-                          </button>
-                        </div>
-                        {p.content && <p className="text-sm whitespace-pre-wrap mt-3 leading-relaxed">{p.content}</p>}
-                        {p.image_url && <img src={p.image_url} className="mt-3 w-full rounded-xl" alt="" />}
-                        {p.video_url && <video src={p.video_url} controls className="mt-3 w-full rounded-xl" />}
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {posts.map(p => (
-                      <div key={p.id} className="aspect-square relative rounded-xl overflow-hidden bg-muted group">
-                        {p.image_url ? (
-                          <img src={p.image_url} className="w-full h-full object-cover" alt="" />
-                        ) : (
-                          <div className="w-full h-full p-3 text-xs flex items-center justify-center text-center">{p.content?.slice(0, 80) || "—"}</div>
-                        )}
-                        <button onClick={() => deletePost(p.id)} className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <UserPostsList userId={user!.id} viewMode={view} />
               </div>
             </TabsContent>
 
