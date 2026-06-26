@@ -88,7 +88,10 @@ export function UserPostsList({ userId, viewMode = "list", reloadKey = 0 }: { us
     try {
       if (navigator.share) await navigator.share({ title: "منشور على KAIAN", text: post.content || "", url });
       else { await navigator.clipboard.writeText(url); toast.success("تم نسخ الرابط"); }
-      await supabase.from("posts").update({ shares_count: (post.shares_count || 0) + 1 }).eq("id", post.id);
+      if (user) {
+        const { error } = await supabase.from("post_shares").insert({ post_id: post.id, user_id: user.id });
+        if (!error) toast.success("🎉 حصلت على 1$ في محفظتك");
+      }
     } catch {}
   };
 
