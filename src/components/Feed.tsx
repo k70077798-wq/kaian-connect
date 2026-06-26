@@ -52,6 +52,13 @@ function extractYoutubeId(url: string): string | null {
 
 export function Feed() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const videoAspects = useRef<Record<string, "portrait" | "landscape">>({});
+  const openVideo = (postId: string) => {
+    const kind = videoAspects.current[postId] ?? "landscape";
+    if (kind === "portrait") navigate({ to: "/reels", search: { start: postId } as any });
+    else navigate({ to: "/watch", search: { start: postId } as any });
+  };
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [content, setContent] = useState("");
