@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_campaigns: {
+        Row: {
+          audience: string | null
+          budget: number
+          clicks: number
+          content: string | null
+          created_at: string
+          cta: string | null
+          daily_cost: number
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          impressions: number
+          link_url: string | null
+          spent: number
+          starts_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience?: string | null
+          budget: number
+          clicks?: number
+          content?: string | null
+          created_at?: string
+          cta?: string | null
+          daily_cost?: number
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          link_url?: string | null
+          spent?: number
+          starts_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience?: string | null
+          budget?: number
+          clicks?: number
+          content?: string | null
+          created_at?: string
+          cta?: string | null
+          daily_cost?: number
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          link_url?: string | null
+          spent?: number
+          starts_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           advertiser_id: string
@@ -47,6 +110,24 @@ export type Database = {
           link_url?: string | null
           status?: string
           title?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -432,6 +513,35 @@ export type Database = {
           },
         ]
       }
+      post_shares: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_shares_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           background: string | null
@@ -563,6 +673,45 @@ export type Database = {
         }
         Relationships: []
       }
+      topup_requests: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          processed_at: string | null
+          proof_url: string | null
+          reference: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          method: string
+          processed_at?: string | null
+          proof_url?: string | null
+          reference?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          processed_at?: string | null
+          proof_url?: string | null
+          reference?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -581,11 +730,111 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string | null
+          note: string | null
+          reference: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          note?: string | null
+          reference?: string | null
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          note?: string | null
+          reference?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawal_requests: {
+        Row: {
+          account_info: string
+          admin_note: string | null
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          processed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          account_info: string
+          admin_note?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          method: string
+          processed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          account_info?: string
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          processed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_wallet: {
+        Args: { _amount: number; _note: string; _user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
