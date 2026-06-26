@@ -401,7 +401,27 @@ export function Feed() {
                 )
               )}
               {post.image_url && <img src={post.image_url} className="mt-3 w-full rounded-xl" alt="" />}
-              {post.video_url && <video src={post.video_url} controls className="mt-3 w-full rounded-xl" />}
+              {post.video_url && (
+                <div className="mt-3 relative rounded-xl overflow-hidden bg-black group cursor-pointer" onClick={() => openVideo(post.id)}>
+                  <video
+                    src={post.video_url}
+                    className="w-full"
+                    preload="metadata"
+                    muted
+                    playsInline
+                    onLoadedMetadata={(e) => {
+                      const v = e.currentTarget;
+                      videoAspects.current[post.id] = v.videoHeight > v.videoWidth ? "portrait" : "landscape";
+                    }}
+                    onClick={(e) => { e.stopPropagation(); openVideo(post.id); }}
+                  />
+                  <div className="absolute inset-0 grid place-items-center bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none">
+                    <div className="grid h-16 w-16 place-items-center rounded-full bg-black/60 backdrop-blur">
+                      <svg className="h-8 w-8 text-white fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                  </div>
+                </div>
+              )}
               {post.youtube_url && (
                 <div className="mt-3 aspect-video w-full rounded-xl overflow-hidden">
                   <iframe className="h-full w-full" src={post.youtube_url} allowFullScreen />
