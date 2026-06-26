@@ -115,11 +115,13 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 lg:w-auto lg:inline-flex">
           <TabsTrigger value="users">المستخدمون</TabsTrigger>
           <TabsTrigger value="posts">المنشورات</TabsTrigger>
-          <TabsTrigger value="ads">الإعلانات</TabsTrigger>
-          <TabsTrigger value="analytics">الإحصائيات</TabsTrigger>
+          <TabsTrigger value="wallets">المحافظ</TabsTrigger>
+          <TabsTrigger value="topups">التعبئة</TabsTrigger>
+          <TabsTrigger value="withdrawals">السحوبات</TabsTrigger>
+          <TabsTrigger value="campaigns">الحملات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-4">
@@ -194,32 +196,152 @@ function AdminPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="ads" className="mt-4">
-          <Card className="p-4 shadow-card space-y-2">
-            {ads.map(a => (
-              <div key={a.id} className="flex items-center justify-between gap-4 p-3 rounded-xl hover:bg-muted/40">
-                <div className="flex-1">
-                  <p className="font-semibold">{a.title}</p>
-                  <p className="text-xs text-muted-foreground">الميزانية: {a.budget} — الحالة: {a.status}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => updateAdStatus(a.id, "approved")}>قبول</Button>
-                  <Button size="sm" variant="destructive" onClick={() => updateAdStatus(a.id, "rejected")}>رفض</Button>
-                </div>
-              </div>
-            ))}
-            {ads.length === 0 && <p className="text-center text-muted-foreground py-8">لا توجد إعلانات</p>}
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="mt-4">
-          <Card className="p-8 shadow-card text-center">
-            <TrendingUp className="h-12 w-12 text-primary mx-auto mb-3" />
-            <h3 className="text-xl font-bold">تحليلات متقدمة</h3>
-            <p className="text-muted-foreground mt-2">قريباً — رسوم بيانية تفصيلية لنمو المنصة.</p>
-          </Card>
-        </TabsContent>
+        <TabsContent value="wallets" className="mt-4"><AdminWallets users={users} onChange={refresh}/></TabsContent>
+        <TabsContent value="topups" className="mt-4"><AdminTopups/></TabsContent>
+        <TabsContent value="withdrawals" className="mt-4"><AdminWithdrawals/></TabsContent>
+        <TabsContent value="campaigns" className="mt-4"><AdminCampaigns/></TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function AdminWallets({ users, onChange }: { users: any[]; onChange: () => void }) {
+  const [wallets, setWallets] = useState<Record<string, number>>({});
+  const [amount, setAmount] = useState<Record<string, string>>({});
+  const [note, setNote] = useState<Record<string, string>>({});
+  useEffect(() => {
+    supabase.from("wallets").select("user_id,balance").then(({ data }) => {
+      const m: any = {}; (data || []).forEach(w => m[w.user_id] = Number(w.balance));
+      setWallets(m);
+    });
+  }, [users]);
+  const adjust = async (uid: string, sign: 1 | -1) => {
+    const v = Number(amount[uid] || 0);
+    if (!v) return toast.error("أدخل مبلغًا");
+    const { error } = await supabase.rpc("admin_adjust_wallet" as any, { _user_id: uid, _amount: sign * v, _note: note[uid] || "تعديل من الإدارة" });
+    if (error) return toast.error(error.message);
+    toast.success("تم التعديل");
+    setAmount({ ...amount, [uid]: "" }); setNote({ ...note, [uid]: "" });
+    const { data } = await supabase.from("wallets").select("user_id,balance");
+    const m: any = {}; (data || []).forEach(w => m[w.user_id] = Number(w.balance));
+    setWallets(m); onChange();
+  };
+  return (
+    <Card className="p-4 shadow-card space-y-2">
+      {users.map(u => (
+        <div key={u.id} className="flex flex-wrap items-center gap-3 p-3 rounded-xl hover:bg-muted/40 border">
+          <div className="flex-1 min-w-[180px]">
+            <p className="font-semibold">{u.full_name || u.username}</p>
+            <p className="text-xs text-muted-foreground">الرصيد: <span className="font-bold text-primary">{(wallets[u.id] ?? 0).toFixed(2)}$</span></p>
+          </div>
+          <Input className="w-28" type="number" placeholder="مبلغ" value={amount[u.id] || ""} onChange={e => setAmount({ ...amount, [u.id]: e.target.value })}/>
+          <Input className="w-40" placeholder="ملاحظة" value={note[u.id] || ""} onChange={e => setNote({ ...note, [u.id]: e.target.value })}/>
+          <Button size="sm" onClick={() => adjust(u.id, 1)} className="bg-emerald-600 hover:bg-emerald-700">+ إضافة</Button>
+          <Button size="sm" variant="destructive" onClick={() => adjust(u.id, -1)}>- خصم</Button>
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+function AdminTopups() {
+  const [items, setItems] = useState<any[]>([]);
+  const load = async () => {
+    const { data } = await supabase.from("topup_requests").select("*, profiles:user_id(full_name,username)").order("created_at",{ascending:false});
+    setItems(data || []);
+  };
+  useEffect(() => { load(); }, []);
+  const act = async (id: string, status: "approved" | "rejected", note?: string) => {
+    await supabase.from("topup_requests").update({ status, admin_note: note }).eq("id", id);
+    toast.success("تم");
+    load();
+  };
+  return (
+    <Card className="p-4 shadow-card space-y-2">
+      {items.length === 0 && <p className="text-center text-muted-foreground py-8">لا توجد طلبات تعبئة</p>}
+      {items.map(t => (
+        <div key={t.id} className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border">
+          <div>
+            <p className="font-semibold">{t.profiles?.full_name || t.profiles?.username} — {Number(t.amount).toFixed(2)}$</p>
+            <p className="text-xs text-muted-foreground">{t.method} • مرجع: {t.reference || "—"} • {new Date(t.created_at).toLocaleString("ar")}</p>
+          </div>
+          <div className="flex gap-2">
+            <Badge variant={t.status==="approved"?"default":t.status==="rejected"?"destructive":"outline"}>{t.status}</Badge>
+            {t.status === "pending" && <>
+              <Button size="sm" onClick={() => act(t.id, "approved")} className="bg-emerald-600 hover:bg-emerald-700">قبول وإضافة الرصيد</Button>
+              <Button size="sm" variant="destructive" onClick={() => act(t.id, "rejected", "تم الرفض")}>رفض</Button>
+            </>}
+          </div>
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+function AdminWithdrawals() {
+  const [items, setItems] = useState<any[]>([]);
+  const load = async () => {
+    const { data } = await supabase.from("withdrawal_requests").select("*, profiles:user_id(full_name,username)").order("created_at",{ascending:false});
+    setItems(data || []);
+  };
+  useEffect(() => { load(); }, []);
+  const act = async (id: string, status: "approved" | "rejected") => {
+    await supabase.from("withdrawal_requests").update({ status }).eq("id", id);
+    toast.success("تم"); load();
+  };
+  return (
+    <Card className="p-4 shadow-card space-y-2">
+      {items.length === 0 && <p className="text-center text-muted-foreground py-8">لا توجد طلبات سحب</p>}
+      {items.map(t => (
+        <div key={t.id} className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border">
+          <div>
+            <p className="font-semibold">{t.profiles?.full_name || t.profiles?.username} — {Number(t.amount).toFixed(2)}$</p>
+            <p className="text-xs text-muted-foreground">{t.method} • {t.account_info} • {new Date(t.created_at).toLocaleString("ar")}</p>
+          </div>
+          <div className="flex gap-2">
+            <Badge variant={t.status==="approved"?"default":t.status==="rejected"?"destructive":"outline"}>{t.status}</Badge>
+            {t.status === "pending" && <>
+              <Button size="sm" onClick={() => act(t.id, "approved")} className="bg-emerald-600 hover:bg-emerald-700">تم التحويل</Button>
+              <Button size="sm" variant="destructive" onClick={() => act(t.id, "rejected")}>رفض وإعادة الرصيد</Button>
+            </>}
+          </div>
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+function AdminCampaigns() {
+  const [items, setItems] = useState<any[]>([]);
+  const load = async () => {
+    const { data } = await supabase.from("ad_campaigns").select("*, profiles:user_id(full_name,username)").order("created_at",{ascending:false});
+    setItems(data || []);
+  };
+  useEffect(() => { load(); }, []);
+  const setStatus = async (id: string, status: string) => {
+    await supabase.from("ad_campaigns").update({ status }).eq("id", id);
+    toast.success("تم"); load();
+  };
+  return (
+    <Card className="p-4 shadow-card space-y-2">
+      {items.length === 0 && <p className="text-center text-muted-foreground py-8">لا توجد حملات</p>}
+      {items.map(c => (
+        <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border">
+          <div className="flex items-center gap-3 flex-1">
+            {c.image_url && <img src={c.image_url} className="h-14 w-20 object-cover rounded"/>}
+            <div>
+              <p className="font-semibold">{c.title} <span className="text-xs text-muted-foreground">— {c.profiles?.full_name || c.profiles?.username}</span></p>
+              <p className="text-xs text-muted-foreground">ميزانية: {Number(c.budget).toFixed(2)}$ • مشاهدات: {c.impressions} • نقرات: {c.clicks}</p>
+            </div>
+          </div>
+          <div className="flex gap-2 items-center">
+            <Badge variant={c.status==="active"?"default":c.status==="rejected"?"destructive":"outline"}>{c.status}</Badge>
+            <Button size="sm" variant="outline" onClick={() => setStatus(c.id, "active")}>تفعيل</Button>
+            <Button size="sm" variant="outline" onClick={() => setStatus(c.id, "paused")}>إيقاف</Button>
+            <Button size="sm" variant="destructive" onClick={() => setStatus(c.id, "rejected")}>رفض</Button>
+          </div>
+        </div>
+      ))}
+    </Card>
   );
 }

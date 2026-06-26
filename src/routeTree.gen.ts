@@ -13,6 +13,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppWatchRouteImport } from './routes/_app/watch'
+import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppReelsRouteImport } from './routes/_app/reels'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
@@ -22,6 +23,7 @@ import { Route as AppMessagesRouteImport } from './routes/_app/messages'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppGroupsRouteImport } from './routes/_app/groups'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
+import { Route as AppAdsManagerRouteImport } from './routes/_app/ads-manager'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppProfileUserIdRouteImport } from './routes/_app/profile.$userId'
 import { Route as AppPagesPageIdRouteImport } from './routes/_app/pages.$pageId'
@@ -43,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppWatchRoute = AppWatchRouteImport.update({
   id: '/watch',
   path: '/watch',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWalletRoute = AppWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -90,6 +97,11 @@ const AppFriendsRoute = AppFriendsRouteImport.update({
   path: '/friends',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdsManagerRoute = AppAdsManagerRouteImport.update({
+  id: '/ads-manager',
+  path: '/ads-manager',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -110,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/register': typeof RegisterRoute
   '/admin': typeof AppAdminRoute
+  '/ads-manager': typeof AppAdsManagerRoute
   '/friends': typeof AppFriendsRoute
   '/groups': typeof AppGroupsRoute
   '/home': typeof AppHomeRoute
@@ -119,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
   '/settings': typeof AppSettingsRoute
+  '/wallet': typeof AppWalletRoute
   '/watch': typeof AppWatchRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
@@ -127,6 +141,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/register': typeof RegisterRoute
   '/admin': typeof AppAdminRoute
+  '/ads-manager': typeof AppAdsManagerRoute
   '/friends': typeof AppFriendsRoute
   '/groups': typeof AppGroupsRoute
   '/home': typeof AppHomeRoute
@@ -136,6 +151,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
   '/settings': typeof AppSettingsRoute
+  '/wallet': typeof AppWalletRoute
   '/watch': typeof AppWatchRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
@@ -146,6 +162,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/register': typeof RegisterRoute
   '/_app/admin': typeof AppAdminRoute
+  '/_app/ads-manager': typeof AppAdsManagerRoute
   '/_app/friends': typeof AppFriendsRoute
   '/_app/groups': typeof AppGroupsRoute
   '/_app/home': typeof AppHomeRoute
@@ -155,6 +172,7 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRouteWithChildren
   '/_app/reels': typeof AppReelsRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/wallet': typeof AppWalletRoute
   '/_app/watch': typeof AppWatchRoute
   '/_app/pages/$pageId': typeof AppPagesPageIdRoute
   '/_app/profile/$userId': typeof AppProfileUserIdRoute
@@ -165,6 +183,7 @@ export interface FileRouteTypes {
     | '/'
     | '/register'
     | '/admin'
+    | '/ads-manager'
     | '/friends'
     | '/groups'
     | '/home'
@@ -174,6 +193,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reels'
     | '/settings'
+    | '/wallet'
     | '/watch'
     | '/pages/$pageId'
     | '/profile/$userId'
@@ -182,6 +202,7 @@ export interface FileRouteTypes {
     | '/'
     | '/register'
     | '/admin'
+    | '/ads-manager'
     | '/friends'
     | '/groups'
     | '/home'
@@ -191,6 +212,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reels'
     | '/settings'
+    | '/wallet'
     | '/watch'
     | '/pages/$pageId'
     | '/profile/$userId'
@@ -200,6 +222,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/register'
     | '/_app/admin'
+    | '/_app/ads-manager'
     | '/_app/friends'
     | '/_app/groups'
     | '/_app/home'
@@ -209,6 +232,7 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_app/reels'
     | '/_app/settings'
+    | '/_app/wallet'
     | '/_app/watch'
     | '/_app/pages/$pageId'
     | '/_app/profile/$userId'
@@ -248,6 +272,13 @@ declare module '@tanstack/react-router' {
       path: '/watch'
       fullPath: '/watch'
       preLoaderRoute: typeof AppWatchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/wallet': {
+      id: '/_app/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AppWalletRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -313,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFriendsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ads-manager': {
+      id: '/_app/ads-manager'
+      path: '/ads-manager'
+      fullPath: '/ads-manager'
+      preLoaderRoute: typeof AppAdsManagerRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin': {
       id: '/_app/admin'
       path: '/admin'
@@ -363,6 +401,7 @@ const AppProfileRouteWithChildren = AppProfileRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
+  AppAdsManagerRoute: typeof AppAdsManagerRoute
   AppFriendsRoute: typeof AppFriendsRoute
   AppGroupsRoute: typeof AppGroupsRoute
   AppHomeRoute: typeof AppHomeRoute
@@ -372,11 +411,13 @@ interface AppRouteChildren {
   AppProfileRoute: typeof AppProfileRouteWithChildren
   AppReelsRoute: typeof AppReelsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppWalletRoute: typeof AppWalletRoute
   AppWatchRoute: typeof AppWatchRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
+  AppAdsManagerRoute: AppAdsManagerRoute,
   AppFriendsRoute: AppFriendsRoute,
   AppGroupsRoute: AppGroupsRoute,
   AppHomeRoute: AppHomeRoute,
@@ -386,6 +427,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfileRoute: AppProfileRouteWithChildren,
   AppReelsRoute: AppReelsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppWalletRoute: AppWalletRoute,
   AppWatchRoute: AppWatchRoute,
 }
 

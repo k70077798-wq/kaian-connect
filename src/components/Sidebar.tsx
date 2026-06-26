@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Home, Users, Bookmark, Flag, Calendar, Store, Clapperboard, Gamepad2, Briefcase, Image as ImageIcon, UsersRound, Sun, Moon, User as UserIcon, Settings } from "lucide-react";
+import { Home, Users, Bookmark, Flag, Calendar, Store, Clapperboard, Gamepad2, Briefcase, Image as ImageIcon, UsersRound, Sun, Moon, User as UserIcon, Settings, Wallet, Megaphone } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 const items = [
   { to: "/home", icon: Home, label: "آخر الأخبار" },
   { to: "/reels", icon: Clapperboard, label: "الريلز", accent: true },
+  { to: "/wallet", icon: Wallet, label: "المحفظة", accent: true },
+  { to: "/ads-manager", icon: Megaphone, label: "إعلاناتي" },
   { to: "/friends", icon: Users, label: "الأصدقاء" },
   { to: "/groups", icon: UsersRound, label: "المجموعات" },
   { to: "/pages", icon: Flag, label: "الصفحات" },
