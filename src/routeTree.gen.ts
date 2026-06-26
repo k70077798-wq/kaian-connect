@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppWatchRouteImport } from './routes/_app/watch'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppReelsRouteImport } from './routes/_app/reels'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
@@ -38,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppWatchRoute = AppWatchRouteImport.update({
+  id: '/watch',
+  path: '/watch',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
   '/settings': typeof AppSettingsRoute
+  '/watch': typeof AppWatchRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
 }
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
   '/settings': typeof AppSettingsRoute
+  '/watch': typeof AppWatchRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
 }
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/_app/profile': typeof AppProfileRouteWithChildren
   '/_app/reels': typeof AppReelsRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/watch': typeof AppWatchRoute
   '/_app/pages/$pageId': typeof AppPagesPageIdRoute
   '/_app/profile/$userId': typeof AppProfileUserIdRoute
 }
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reels'
     | '/settings'
+    | '/watch'
     | '/pages/$pageId'
     | '/profile/$userId'
   fileRoutesByTo: FileRoutesByTo
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reels'
     | '/settings'
+    | '/watch'
     | '/pages/$pageId'
     | '/profile/$userId'
   id:
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/_app/profile'
     | '/_app/reels'
     | '/_app/settings'
+    | '/_app/watch'
     | '/_app/pages/$pageId'
     | '/_app/profile/$userId'
   fileRoutesById: FileRoutesById
@@ -230,6 +242,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/watch': {
+      id: '/_app/watch'
+      path: '/watch'
+      fullPath: '/watch'
+      preLoaderRoute: typeof AppWatchRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/settings': {
       id: '/_app/settings'
@@ -353,6 +372,7 @@ interface AppRouteChildren {
   AppProfileRoute: typeof AppProfileRouteWithChildren
   AppReelsRoute: typeof AppReelsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppWatchRoute: typeof AppWatchRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -366,6 +386,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProfileRoute: AppProfileRouteWithChildren,
   AppReelsRoute: AppReelsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppWatchRoute: AppWatchRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
