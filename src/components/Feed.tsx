@@ -21,7 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import { StoryViewer } from "@/components/StoryViewer";
 import { ReelsStrip } from "@/components/ReelsStrip";
 import { AddFriendButton } from "@/components/AddFriendButton";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { PostComposer, backgroundStyle } from "@/components/PostComposer";
 import { Globe, Users as UsersIcon, Lock, MapPin } from "lucide-react";
 
