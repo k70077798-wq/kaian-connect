@@ -115,11 +115,13 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 lg:w-auto lg:inline-flex">
           <TabsTrigger value="users">المستخدمون</TabsTrigger>
           <TabsTrigger value="posts">المنشورات</TabsTrigger>
-          <TabsTrigger value="ads">الإعلانات</TabsTrigger>
-          <TabsTrigger value="analytics">الإحصائيات</TabsTrigger>
+          <TabsTrigger value="wallets">المحافظ</TabsTrigger>
+          <TabsTrigger value="topups">التعبئة</TabsTrigger>
+          <TabsTrigger value="withdrawals">السحوبات</TabsTrigger>
+          <TabsTrigger value="campaigns">الحملات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="mt-4">
