@@ -173,7 +173,7 @@ function CreatePageDialog({ onCreated }: { onCreated: () => void }) {
 
   async function uploadFile(file: File, prefix: string) {
     const ext = file.name.split(".").pop();
-    const path = `pages/${user!.id}/${prefix}-${Date.now()}.${ext}`;
+    const path = `${user!.id}/pages/${prefix}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
     if (error) throw error;
     return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
