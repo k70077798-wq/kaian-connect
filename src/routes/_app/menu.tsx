@@ -9,7 +9,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import {
   Search, Settings, ChevronDown, LayoutDashboard, Users, Bookmark, History,
   Clapperboard, UsersRound, Newspaper, Store, Wallet, Megaphone, Briefcase,
-  Flag, Calendar, Gamepad2, HelpCircle, LogOut, Shield, Moon, Sun,
+  Flag, Calendar, Gamepad2, HelpCircle, LogOut, Shield, Moon, Sun, Bell,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
@@ -26,22 +26,16 @@ type Tile = {
 };
 
 const TILES: Tile[] = [
-  { to: "/admin", label: "لوحة المعلومات", icon: LayoutDashboard, color: "text-blue-500", bg: "bg-blue-500/10", adminOnly: true },
+  { to: "/dashboard", label: "لوحة المعلومات", icon: LayoutDashboard, color: "text-blue-500", bg: "bg-blue-500/10" },
   { to: "/friends", label: "الأصدقاء", icon: Users, color: "text-sky-500", bg: "bg-sky-500/10" },
-  { to: "/saved", label: "العناصر المحفوظة", icon: Bookmark, color: "text-fuchsia-500", bg: "bg-fuchsia-500/10" },
-  { to: "/memories", label: "الذكريات", icon: History, color: "text-cyan-500", bg: "bg-cyan-500/10" },
   { to: "/reels", label: "ريلز", icon: Clapperboard, color: "text-violet-500", bg: "bg-violet-500/10" },
+  { to: "/watch", label: "الفيديوهات", icon: Clapperboard, color: "text-indigo-500", bg: "bg-indigo-500/10" },
   { to: "/groups", label: "المجموعات", icon: UsersRound, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { to: "/notifications", label: "الأخبار", icon: Newspaper, color: "text-sky-500", bg: "bg-sky-500/10" },
-  { to: "/marketplace", label: "Marketplace", icon: Store, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { to: "/pages", label: "الصفحات", icon: Flag, color: "text-pink-500", bg: "bg-pink-500/10" },
   { to: "/wallet", label: "المحفظة", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   { to: "/ads-manager", label: "إعلاناتي", icon: Megaphone, color: "text-rose-500", bg: "bg-rose-500/10" },
-  { to: "/watch", label: "الفيديوهات", icon: Clapperboard, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-  { to: "/jobs", label: "الوظائف", icon: Briefcase, color: "text-amber-600", bg: "bg-amber-500/10" },
-  { to: "/pages", label: "الصفحات", icon: Flag, color: "text-pink-500", bg: "bg-pink-500/10" },
-  { to: "/events", label: "الأحداث", icon: Calendar, color: "text-orange-500", bg: "bg-orange-500/10" },
-  { to: "/games", label: "الألعاب", icon: Gamepad2, color: "text-teal-500", bg: "bg-teal-500/10" },
   { to: "/messages", label: "الرسائل", icon: Newspaper, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { to: "/notifications", label: "الإشعارات", icon: Bell as any, color: "text-amber-600", bg: "bg-amber-500/10" },
 ];
 
 function MenuPage() {

@@ -24,6 +24,7 @@ import { Route as AppMenuRouteImport } from './routes/_app/menu'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppGroupsRouteImport } from './routes/_app/groups'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAdsManagerRouteImport } from './routes/_app/ads-manager'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppProfileUserIdRouteImport } from './routes/_app/profile.$userId'
@@ -103,6 +104,11 @@ const AppFriendsRoute = AppFriendsRouteImport.update({
   path: '/friends',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdsManagerRoute = AppAdsManagerRouteImport.update({
   id: '/ads-manager',
   path: '/ads-manager',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/admin': typeof AppAdminRoute
   '/ads-manager': typeof AppAdsManagerRoute
+  '/dashboard': typeof AppDashboardRoute
   '/friends': typeof AppFriendsRoute
   '/groups': typeof AppGroupsRoute
   '/home': typeof AppHomeRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/admin': typeof AppAdminRoute
   '/ads-manager': typeof AppAdsManagerRoute
+  '/dashboard': typeof AppDashboardRoute
   '/friends': typeof AppFriendsRoute
   '/groups': typeof AppGroupsRoute
   '/home': typeof AppHomeRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_app/admin': typeof AppAdminRoute
   '/_app/ads-manager': typeof AppAdsManagerRoute
+  '/_app/dashboard': typeof AppDashboardRoute
   '/_app/friends': typeof AppFriendsRoute
   '/_app/groups': typeof AppGroupsRoute
   '/_app/home': typeof AppHomeRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/ads-manager'
+    | '/dashboard'
     | '/friends'
     | '/groups'
     | '/home'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/ads-manager'
+    | '/dashboard'
     | '/friends'
     | '/groups'
     | '/home'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/_app/admin'
     | '/_app/ads-manager'
+    | '/_app/dashboard'
     | '/_app/friends'
     | '/_app/groups'
     | '/_app/home'
@@ -363,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFriendsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/ads-manager': {
       id: '/_app/ads-manager'
       path: '/ads-manager'
@@ -421,6 +440,7 @@ const AppProfileRouteWithChildren = AppProfileRoute._addFileChildren(
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRoute
   AppAdsManagerRoute: typeof AppAdsManagerRoute
+  AppDashboardRoute: typeof AppDashboardRoute
   AppFriendsRoute: typeof AppFriendsRoute
   AppGroupsRoute: typeof AppGroupsRoute
   AppHomeRoute: typeof AppHomeRoute
@@ -438,6 +458,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRoute,
   AppAdsManagerRoute: AppAdsManagerRoute,
+  AppDashboardRoute: AppDashboardRoute,
   AppFriendsRoute: AppFriendsRoute,
   AppGroupsRoute: AppGroupsRoute,
   AppHomeRoute: AppHomeRoute,
