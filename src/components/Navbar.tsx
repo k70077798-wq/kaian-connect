@@ -1,17 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, Home, MessageCircle, Search, LogOut, User as UserIcon, Shield, Users, Image as ImageIcon, Clapperboard, Loader2 } from "lucide-react";
+import { Bell, Home, MessageCircle, Search, Users, Clapperboard, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SearchResult { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
 
 export function Navbar() {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
   const [unread, setUnread] = useState(0);
@@ -139,34 +137,17 @@ export function Navbar() {
           <Clapperboard className="h-5 w-5" />
         </Link>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="rounded-full ring-2 ring-transparent hover:ring-primary/30 transition">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={profile?.avatar_url ?? undefined} />
-                <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials}</AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="px-2 py-2">
-              <p className="text-sm font-semibold">{profile?.full_name || "مستخدم"}</p>
-              <p className="text-xs text-muted-foreground">@{profile?.username || "—"}</p>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}><UserIcon className="ms-2 h-4 w-4" />ملفي الشخصي</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate({ to: "/pages" })}><ImageIcon className="ms-2 h-4 w-4" />صفحاتي</DropdownMenuItem>
-            {isAdmin && (
-              <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
-                <Shield className="ms-2 h-4 w-4 text-primary" />لوحة التحكم
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={async () => { await signOut(); navigate({ to: "/" }); }}>
-              <LogOut className="ms-2 h-4 w-4" />تسجيل الخروج
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button
+          onClick={() => navigate({ to: "/menu" })}
+          className="relative rounded-full ring-2 ring-transparent hover:ring-primary/40 transition"
+          aria-label="القائمة"
+        >
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={profile?.avatar_url ?? undefined} />
+            <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials}</AvatarFallback>
+          </Avatar>
+          <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-primary text-primary-foreground border-2 border-card text-[8px] font-black">≡</span>
+        </button>
       </div>
     </header>
   );
