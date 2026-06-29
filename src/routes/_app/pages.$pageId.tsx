@@ -414,6 +414,7 @@ function InsightRow({ label, value }: { label: string; value: number }) {
 }
 
 function EditPageDialog({ page, onSaved }: { page: any; onSaved: () => void }) {
+  const { user } = useAuth();
   const [name, setName] = useState(page.name || "");
   const [description, setDescription] = useState(page.description || "");
   const [category, setCategory] = useState(page.category || CATEGORIES[0]);
@@ -423,7 +424,7 @@ function EditPageDialog({ page, onSaved }: { page: any; onSaved: () => void }) {
 
   async function uploadFile(file: File, prefix: string) {
     const ext = file.name.split(".").pop();
-    const path = `pages/${page.id}/${prefix}-${Date.now()}.${ext}`;
+    const path = `${user!.id}/pages/${page.id}/${prefix}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
     if (error) throw error;
     return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
