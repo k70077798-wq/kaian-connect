@@ -9,7 +9,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import {
   Search, Settings, ChevronDown, LayoutDashboard, Users, Bookmark, History,
   Clapperboard, UsersRound, Newspaper, Store, Wallet, Megaphone, Briefcase,
-  Flag, Calendar, Gamepad2, HelpCircle, LogOut, Shield, Moon, Sun,
+  Flag, Calendar, Gamepad2, HelpCircle, LogOut, Shield, Moon, Sun, Bell,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
