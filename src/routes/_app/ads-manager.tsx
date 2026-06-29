@@ -50,7 +50,7 @@ function AdsManagerPage() {
   const uploadImage = async (file: File) => {
     if (!user) return;
     setUploading(true);
-    const path = `ads/${user.id}/${Date.now()}-${file.name}`;
+    const path = `${user.id}/ads/${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("media").upload(path, file);
     if (error) { toast.error("فشل الرفع"); setUploading(false); return; }
     const { data } = supabase.storage.from("media").getPublicUrl(path);

@@ -115,7 +115,7 @@ function PageDetail() {
     try {
       let image_url: string | null = null;
       if (postFile) {
-        const path = `pages/${pageId}/posts/${Date.now()}-${postFile.name}`;
+        const path = `${user.id}/pages/${pageId}/posts/${Date.now()}-${postFile.name}`;
         const { error } = await supabase.storage.from("media").upload(path, postFile, { upsert: true });
         if (error) throw error;
         image_url = supabase.storage.from("media").getPublicUrl(path).data.publicUrl;

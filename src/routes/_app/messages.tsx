@@ -173,7 +173,7 @@ function MessagesPage() {
     if (!user) return;
     setUploading(true);
     const ext = f.name.split(".").pop() || "bin";
-    const path = `messages/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const path = `${user.id}/messages/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("media").upload(path, f);
     if (error) { setUploading(false); toast.error("فشل الرفع"); return; }
     const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
