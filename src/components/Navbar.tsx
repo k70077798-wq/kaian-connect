@@ -139,34 +139,17 @@ export function Navbar() {
           <Clapperboard className="h-5 w-5" />
         </Link>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="rounded-full ring-2 ring-transparent hover:ring-primary/30 transition">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={profile?.avatar_url ?? undefined} />
-                <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials}</AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="px-2 py-2">
-              <p className="text-sm font-semibold">{profile?.full_name || "مستخدم"}</p>
-              <p className="text-xs text-muted-foreground">@{profile?.username || "—"}</p>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}><UserIcon className="ms-2 h-4 w-4" />ملفي الشخصي</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate({ to: "/pages" })}><ImageIcon className="ms-2 h-4 w-4" />صفحاتي</DropdownMenuItem>
-            {isAdmin && (
-              <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
-                <Shield className="ms-2 h-4 w-4 text-primary" />لوحة التحكم
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={async () => { await signOut(); navigate({ to: "/" }); }}>
-              <LogOut className="ms-2 h-4 w-4" />تسجيل الخروج
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button
+          onClick={() => navigate({ to: "/menu" })}
+          className="relative rounded-full ring-2 ring-transparent hover:ring-primary/40 transition"
+          aria-label="القائمة"
+        >
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={profile?.avatar_url ?? undefined} />
+            <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials}</AvatarFallback>
+          </Avatar>
+          <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-primary text-primary-foreground border-2 border-card text-[8px] font-black">≡</span>
+        </button>
       </div>
     </header>
   );

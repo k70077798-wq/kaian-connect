@@ -20,6 +20,7 @@ import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppPagesRouteImport } from './routes/_app/pages'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppMessagesRouteImport } from './routes/_app/messages'
+import { Route as AppMenuRouteImport } from './routes/_app/menu'
 import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as AppGroupsRouteImport } from './routes/_app/groups'
 import { Route as AppFriendsRouteImport } from './routes/_app/friends'
@@ -82,6 +83,11 @@ const AppMessagesRoute = AppMessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMenuRoute = AppMenuRouteImport.update({
+  id: '/menu',
+  path: '/menu',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHomeRoute = AppHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/friends': typeof AppFriendsRoute
   '/groups': typeof AppGroupsRoute
   '/home': typeof AppHomeRoute
+  '/menu': typeof AppMenuRoute
   '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
   '/pages': typeof AppPagesRouteWithChildren
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/friends': typeof AppFriendsRoute
   '/groups': typeof AppGroupsRoute
   '/home': typeof AppHomeRoute
+  '/menu': typeof AppMenuRoute
   '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
   '/pages': typeof AppPagesRouteWithChildren
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_app/friends': typeof AppFriendsRoute
   '/_app/groups': typeof AppGroupsRoute
   '/_app/home': typeof AppHomeRoute
+  '/_app/menu': typeof AppMenuRoute
   '/_app/messages': typeof AppMessagesRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/pages': typeof AppPagesRouteWithChildren
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/groups'
     | '/home'
+    | '/menu'
     | '/messages'
     | '/notifications'
     | '/pages'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/groups'
     | '/home'
+    | '/menu'
     | '/messages'
     | '/notifications'
     | '/pages'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/_app/friends'
     | '/_app/groups'
     | '/_app/home'
+    | '/_app/menu'
     | '/_app/messages'
     | '/_app/notifications'
     | '/_app/pages'
@@ -323,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMessagesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/menu': {
+      id: '/_app/menu'
+      path: '/menu'
+      fullPath: '/menu'
+      preLoaderRoute: typeof AppMenuRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/home': {
       id: '/_app/home'
       path: '/home'
@@ -405,6 +424,7 @@ interface AppRouteChildren {
   AppFriendsRoute: typeof AppFriendsRoute
   AppGroupsRoute: typeof AppGroupsRoute
   AppHomeRoute: typeof AppHomeRoute
+  AppMenuRoute: typeof AppMenuRoute
   AppMessagesRoute: typeof AppMessagesRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPagesRoute: typeof AppPagesRouteWithChildren
@@ -421,6 +441,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFriendsRoute: AppFriendsRoute,
   AppGroupsRoute: AppGroupsRoute,
   AppHomeRoute: AppHomeRoute,
+  AppMenuRoute: AppMenuRoute,
   AppMessagesRoute: AppMessagesRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppPagesRoute: AppPagesRouteWithChildren,
