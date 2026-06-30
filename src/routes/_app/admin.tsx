@@ -244,6 +244,18 @@ function AdminWallets({ users, onChange }: { users: any[]; onChange: () => void 
   );
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  pending: "معلّق", approved: "موافق", rejected: "مرفوض", completed: "مكتمل",
+};
+function StatusBadge({ s }: { s: string }) {
+  const cls = s === "approved" || s === "completed"
+    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+    : s === "rejected"
+    ? "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30"
+    : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30";
+  return <Badge variant="outline" className={cls}>{STATUS_LABEL[s] || s}</Badge>;
+}
+
 function AdminTopups() {
   const [items, setItems] = useState<any[]>([]);
   const load = async () => {
@@ -252,8 +264,9 @@ function AdminTopups() {
   };
   useEffect(() => { load(); }, []);
   const act = async (id: string, status: "approved" | "rejected", note?: string) => {
-    await supabase.from("topup_requests").update({ status, admin_note: note }).eq("id", id);
-    toast.success("تم");
+    const { error } = await supabase.from("topup_requests").update({ status, admin_note: note }).eq("id", id);
+    if (error) return toast.error(`فشل التحديث: ${error.message}`);
+    toast.success(status === "approved" ? "تمت الموافقة وإضافة الرصيد" : "تم رفض الطلب");
     load();
   };
   return (
@@ -264,9 +277,10 @@ function AdminTopups() {
           <div>
             <p className="font-semibold">{t.profiles?.full_name || t.profiles?.username} — {Number(t.amount).toFixed(2)}$</p>
             <p className="text-xs text-muted-foreground">{t.method} • مرجع: {t.reference || "—"} • {new Date(t.created_at).toLocaleString("ar")}</p>
+            {t.admin_note && <p className="text-xs text-rose-600 mt-1">ملاحظة: {t.admin_note}</p>}
           </div>
-          <div className="flex gap-2">
-            <Badge variant={t.status==="approved"?"default":t.status==="rejected"?"destructive":"outline"}>{t.status}</Badge>
+          <div className="flex gap-2 items-center">
+            <StatusBadge s={t.status} />
             {t.status === "pending" && <>
               <Button size="sm" onClick={() => act(t.id, "approved")} className="bg-emerald-600 hover:bg-emerald-700">قبول وإضافة الرصيد</Button>
               <Button size="sm" variant="destructive" onClick={() => act(t.id, "rejected", "تم الرفض")}>رفض</Button>
@@ -286,8 +300,10 @@ function AdminWithdrawals() {
   };
   useEffect(() => { load(); }, []);
   const act = async (id: string, status: "approved" | "rejected") => {
-    await supabase.from("withdrawal_requests").update({ status }).eq("id", id);
-    toast.success("تم"); load();
+    const { error } = await supabase.from("withdrawal_requests").update({ status }).eq("id", id);
+    if (error) return toast.error(`فشل التحديث: ${error.message}`);
+    toast.success(status === "approved" ? "تم تأكيد التحويل" : "تم الرفض وإعادة الرصيد");
+    load();
   };
   return (
     <Card className="p-4 shadow-card space-y-2">
@@ -298,8 +314,8 @@ function AdminWithdrawals() {
             <p className="font-semibold">{t.profiles?.full_name || t.profiles?.username} — {Number(t.amount).toFixed(2)}$</p>
             <p className="text-xs text-muted-foreground">{t.method} • {t.account_info} • {new Date(t.created_at).toLocaleString("ar")}</p>
           </div>
-          <div className="flex gap-2">
-            <Badge variant={t.status==="approved"?"default":t.status==="rejected"?"destructive":"outline"}>{t.status}</Badge>
+          <div className="flex gap-2 items-center">
+            <StatusBadge s={t.status} />
             {t.status === "pending" && <>
               <Button size="sm" onClick={() => act(t.id, "approved")} className="bg-emerald-600 hover:bg-emerald-700">تم التحويل</Button>
               <Button size="sm" variant="destructive" onClick={() => act(t.id, "rejected")}>رفض وإعادة الرصيد</Button>
@@ -310,6 +326,7 @@ function AdminWithdrawals() {
     </Card>
   );
 }
+
 
 function AdminCampaigns() {
   const [items, setItems] = useState<any[]>([]);
