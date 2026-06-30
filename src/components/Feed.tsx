@@ -23,6 +23,7 @@ import { ReelsStrip } from "@/components/ReelsStrip";
 import { AddFriendButton } from "@/components/AddFriendButton";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { PostComposer, backgroundStyle } from "@/components/PostComposer";
+import { SponsoredAd } from "@/components/SponsoredAd";
 import { Globe, Users as UsersIcon, Lock, MapPin } from "lucide-react";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
@@ -61,6 +62,7 @@ export function Feed() {
   };
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [ads, setAds] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [myProfile, setMyProfile] = useState<Profile | null>(null);
@@ -107,6 +109,23 @@ export function Feed() {
     setStories(data.map(s => ({ ...s, profile: pmap.get(s.user_id) } as Story)));
   };
 
+  const loadAds = async () => {
+    const { data } = await supabase
+      .from("ad_campaigns")
+      .select("id, user_id, title, content, image_url, link_url, cta, status")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (!data || data.length === 0) { setAds([]); return; }
+    const uids = [...new Set(data.map((a: any) => a.user_id))];
+    const { data: profs } = await supabase.from("profiles").select("id, full_name, username, avatar_url").in("id", uids);
+    const pmap = new Map((profs || []).map((p: any) => [p.id, p]));
+    // shuffle
+    const arr = [...data].sort(() => Math.random() - 0.5);
+    setAds(arr.map((a: any) => ({ ...a, profile: pmap.get(a.user_id) })));
+  };
+
+
   const load = async () => {
     setLoading(true);
     const { data: rawPosts } = await supabase.from("posts").select("*").order("created_at", { ascending: false }).limit(50);
@@ -134,9 +153,11 @@ export function Feed() {
       .then(({ data }) => setMyProfile(data));
     load();
     loadStories();
+    loadAds();
     const ch = supabase.channel("feed")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "stories" }, () => loadStories())
+      .on("postgres_changes", { event: "*", schema: "public", table: "ad_campaigns" }, () => loadAds())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
@@ -343,8 +364,14 @@ export function Feed() {
       {loading && <Card className="p-12 text-center text-muted-foreground">جاري التحميل...</Card>}
 
       <AnimatePresence>
-        {posts.map(post => (
-          <motion.div key={post.id} id={`post-${post.id}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+        {posts.map((post, idx) => (
+          <div key={post.id}>
+          {idx > 0 && idx % 3 === 0 && ads.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+              <SponsoredAd ad={ads[Math.floor(idx / 3) % ads.length]} />
+            </motion.div>
+          )}
+          <motion.div id={`post-${post.id}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Card className="p-4 shadow-card">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -480,6 +507,7 @@ export function Feed() {
               )}
             </Card>
           </motion.div>
+          </div>
         ))}
       </AnimatePresence>
 
