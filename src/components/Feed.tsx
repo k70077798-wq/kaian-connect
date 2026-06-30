@@ -62,6 +62,7 @@ export function Feed() {
   };
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [ads, setAds] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [myProfile, setMyProfile] = useState<Profile | null>(null);
@@ -107,6 +108,23 @@ export function Feed() {
     const pmap = new Map((profs || []).map(p => [p.id, p]));
     setStories(data.map(s => ({ ...s, profile: pmap.get(s.user_id) } as Story)));
   };
+
+  const loadAds = async () => {
+    const { data } = await supabase
+      .from("ad_campaigns")
+      .select("id, user_id, title, content, image_url, link_url, cta, status")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (!data || data.length === 0) { setAds([]); return; }
+    const uids = [...new Set(data.map((a: any) => a.user_id))];
+    const { data: profs } = await supabase.from("profiles").select("id, full_name, username, avatar_url").in("id", uids);
+    const pmap = new Map((profs || []).map((p: any) => [p.id, p]));
+    // shuffle
+    const arr = [...data].sort(() => Math.random() - 0.5);
+    setAds(arr.map((a: any) => ({ ...a, profile: pmap.get(a.user_id) })));
+  };
+
 
   const load = async () => {
     setLoading(true);
