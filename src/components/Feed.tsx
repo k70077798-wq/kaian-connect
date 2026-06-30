@@ -364,8 +364,14 @@ export function Feed() {
       {loading && <Card className="p-12 text-center text-muted-foreground">جاري التحميل...</Card>}
 
       <AnimatePresence>
-        {posts.map(post => (
-          <motion.div key={post.id} id={`post-${post.id}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+        {posts.map((post, idx) => (
+          <div key={post.id}>
+          {idx > 0 && idx % 3 === 0 && ads.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+              <SponsoredAd ad={ads[Math.floor(idx / 3) % ads.length]} />
+            </motion.div>
+          )}
+          <motion.div id={`post-${post.id}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Card className="p-4 shadow-card">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
