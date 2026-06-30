@@ -831,6 +831,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ad_click: { Args: { _id: string }; Returns: undefined }
+      ad_impression: { Args: { _id: string }; Returns: undefined }
       admin_adjust_wallet: {
         Args: { _amount: number; _note: string; _user_id: string }
         Returns: undefined
