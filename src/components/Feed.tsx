@@ -23,6 +23,7 @@ import { ReelsStrip } from "@/components/ReelsStrip";
 import { AddFriendButton } from "@/components/AddFriendButton";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { PostComposer, backgroundStyle } from "@/components/PostComposer";
+import { SponsoredAd } from "@/components/SponsoredAd";
 import { Globe, Users as UsersIcon, Lock, MapPin } from "lucide-react";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
