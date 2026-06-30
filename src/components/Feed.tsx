@@ -507,6 +507,7 @@ export function Feed() {
               )}
             </Card>
           </motion.div>
+          </div>
         ))}
       </AnimatePresence>
 
