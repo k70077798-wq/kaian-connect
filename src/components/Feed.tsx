@@ -153,9 +153,11 @@ export function Feed() {
       .then(({ data }) => setMyProfile(data));
     load();
     loadStories();
+    loadAds();
     const ch = supabase.channel("feed")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "stories" }, () => loadStories())
+      .on("postgres_changes", { event: "*", schema: "public", table: "ad_campaigns" }, () => loadAds())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
