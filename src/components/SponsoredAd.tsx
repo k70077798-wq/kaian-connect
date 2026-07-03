@@ -27,9 +27,20 @@ export function SponsoredAd({ ad }: { ad: AdRow }) {
     supabase.rpc("ad_impression", { _id: ad.id });
   }, [ad.id]);
 
+  const normalizedUrl = (() => {
+    if (!ad.link_url) return null;
+    const raw = ad.link_url.trim();
+    if (!raw) return null;
+    try {
+      return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    } catch {
+      return null;
+    }
+  })();
+
   const onClick = async () => {
     await supabase.rpc("ad_click", { _id: ad.id });
-    if (ad.link_url) window.open(ad.link_url, "_blank", "noopener,noreferrer");
+    if (normalizedUrl) window.open(normalizedUrl.toString(), "_blank", "noopener,noreferrer");
   };
 
   const initials = (s?: string | null) => (s || "K").slice(0, 2).toUpperCase();
