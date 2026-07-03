@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Progress } from "@/components/ui/progress";
 import {
   Image as ImageIcon, Video, Smile, Send, Youtube, Radio, X, Loader2,
-  Globe, Users, Lock, MapPin, Palette, ChevronDown, Type,
+  Globe, Users, Lock, MapPin, Palette, ChevronDown, Type, RadioTower,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -69,6 +69,13 @@ interface Props {
   onOpenStory: () => void;
 }
 
+interface MentionSuggestion {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 export function PostComposer({ myProfile, onStartLive }: Props) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -76,8 +83,11 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  const [videoKind, setVideoKind] = useState<"video" | "reel">("video");
   const [youtubeInput, setYoutubeInput] = useState("");
   const [showYoutube, setShowYoutube] = useState(false);
+  const [liveUrl, setLiveUrl] = useState("");
+  const [showLiveUrl, setShowLiveUrl] = useState(false);
   const [feeling, setFeeling] = useState<string | null>(null);
   const [background, setBackground] = useState<string | null>(null);
   const [privacy, setPrivacy] = useState<Privacy>("public");
@@ -87,19 +97,51 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
   const [progress, setProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
 
+  // Mention autocomplete
+  const [mentionQ, setMentionQ] = useState<string | null>(null);
+  const [mentionRes, setMentionRes] = useState<MentionSuggestion[]>([]);
+  const [mentionIdx, setMentionIdx] = useState(0);
+
   const imgRef = useRef<HTMLInputElement>(null);
   const vidRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   const initials = (s?: string | null) => (s || "K").slice(0, 2).toUpperCase();
-  const canUseBackground = !mediaFile && !youtubeInput && content.length <= 130;
+  const canUseBackground = !mediaFile && !youtubeInput && !liveUrl && content.length <= 130;
 
   useEffect(() => { if (!canUseBackground) setBackground(null); }, [canUseBackground]);
 
+  // Mention query
+  useEffect(() => {
+    if (mentionQ === null) { setMentionRes([]); return; }
+    const q = mentionQ.trim();
+    if (q === "" || "followers".startsWith(q) || "متابعين".startsWith(q)) {
+      // Show pseudo entry for followers
+      setMentionRes([{ id: "__followers__", username: "followers", full_name: "المتابعون (الأصدقاء)", avatar_url: null }]);
+    }
+    if (!q) return;
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url")
+        .or(`username.ilike.${q}%,full_name.ilike.%${q}%`)
+        .limit(6);
+      const arr: MentionSuggestion[] = [];
+      if ("followers".startsWith(q.toLowerCase()) || "متابعين".startsWith(q)) {
+        arr.push({ id: "__followers__", username: "followers", full_name: "المتابعون (الأصدقاء)", avatar_url: null });
+      }
+      (data || []).forEach((d: any) => { if (d.id !== user?.id) arr.push(d); });
+      setMentionRes(arr);
+      setMentionIdx(0);
+    }, 180);
+    return () => clearTimeout(t);
+  }, [mentionQ, user?.id]);
+
   const reset = () => {
     setContent(""); setMediaFile(null); setMediaPreview(null); setMediaType(null);
-    setYoutubeInput(""); setShowYoutube(false); setFeeling(null); setBackground(null);
-    setLocation(""); setShowLocation(false); setProgress(0);
+    setYoutubeInput(""); setShowYoutube(false); setLiveUrl(""); setShowLiveUrl(false);
+    setFeeling(null); setBackground(null); setLocation(""); setShowLocation(false); setProgress(0);
+    setVideoKind("video"); setMentionQ(null); setMentionRes([]);
   };
 
   const onFile = (f: File | null, type: "image" | "video") => {
@@ -131,6 +173,45 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
     requestAnimationFrame(() => { ta.focus(); ta.selectionEnd = start + txt.length; });
   };
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setContent(val);
+    // detect @mention at cursor
+    const pos = e.target.selectionStart ?? val.length;
+    const upto = val.slice(0, pos);
+    const m = upto.match(/@([A-Za-z0-9_\u0600-\u06FF]{0,32})$/);
+    if (m) setMentionQ(m[1]);
+    else setMentionQ(null);
+  };
+
+  const applyMention = (item: MentionSuggestion) => {
+    const ta = textRef.current;
+    if (!ta) return;
+    const pos = ta.selectionStart ?? content.length;
+    const upto = content.slice(0, pos);
+    const rest = content.slice(pos);
+    const uname = item.username || "";
+    const replaced = upto.replace(/@([A-Za-z0-9_\u0600-\u06FF]{0,32})$/, `@${uname} `);
+    const next = replaced + rest;
+    setContent(next);
+    setMentionQ(null); setMentionRes([]);
+    requestAnimationFrame(() => {
+      ta.focus();
+      const newPos = replaced.length;
+      ta.selectionEnd = newPos;
+    });
+  };
+
+  const onKeyDownText = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!mentionRes.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setMentionIdx(i => Math.min(i + 1, mentionRes.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setMentionIdx(i => Math.max(i - 1, 0)); }
+    else if (e.key === "Enter" || e.key === "Tab") {
+      const sel = mentionRes[mentionIdx];
+      if (sel) { e.preventDefault(); applyMention(sel); }
+    } else if (e.key === "Escape") { setMentionQ(null); setMentionRes([]); }
+  };
+
   const uploadMedia = async (file: File): Promise<string | null> => {
     const ext = file.name.split(".").pop() || "bin";
     const path = `${user!.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -146,7 +227,11 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
     if (!user || publishing) return;
     const yt = youtubeInput ? extractYoutubeId(youtubeInput) : null;
     if (youtubeInput && !yt) return toast.error("رابط يوتيوب غير صالح");
-    if (!content.trim() && !mediaFile && !yt && !feeling) return;
+    const liveStreamUrl = liveUrl.trim() || null;
+    if (liveStreamUrl && !/^https?:\/\/.+\.m3u8($|\?)/i.test(liveStreamUrl)) {
+      return toast.error("رابط البث يجب أن ينتهي بـ .m3u8");
+    }
+    if (!content.trim() && !mediaFile && !yt && !feeling && !liveStreamUrl) return;
     setPublishing(true); setProgress(10);
     let image_url: string | null = null, video_url: string | null = null;
     if (mediaFile && mediaType) {
@@ -160,7 +245,12 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
       content: content.trim() || null,
       image_url, video_url,
       youtube_url: yt ? `https://www.youtube.com/embed/${yt}` : null,
-      media_type: image_url ? "image" : video_url ? "video" : yt ? "youtube" : null,
+      live_stream_url: liveStreamUrl,
+      is_live: !!liveStreamUrl,
+      media_type: liveStreamUrl ? "live"
+        : image_url ? "image"
+        : video_url ? (videoKind === "reel" ? "reel" : "video")
+        : yt ? "youtube" : null,
       feeling,
       background: canUseBackground ? background : null,
       privacy,
@@ -170,13 +260,12 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
     setPublishing(false);
     if (error) return toast.error("تعذر النشر");
     reset(); setOpen(false);
-    toast.success("تم النشر!");
+    toast.success(liveStreamUrl ? "بدأ البث المباشر!" : "تم النشر!");
   };
 
   const PrivacyIcon = PRIVACY_META[privacy].icon;
   const bgStyle = background ? backgroundStyle(background) : null;
 
-  // Compact (collapsed) bar
   const CompactBar = (
     <Card className="p-3 sm:p-4 shadow-card">
       <div className="flex items-center gap-3">
@@ -193,10 +282,10 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
       </div>
       <div className="mt-3 grid grid-cols-3 gap-1 border-t pt-2">
         <Button variant="ghost" size="sm" className="gap-1.5 sm:gap-2" onClick={() => { setOpen(true); setTimeout(() => imgRef.current?.click(), 50); }}>
-          <ImageIcon className="h-4 w-4 text-green-600" /><span className="hidden xs:inline text-xs sm:text-sm">صورة/فيديو</span><span className="xs:hidden text-xs">صورة</span>
+          <ImageIcon className="h-4 w-4 text-green-600" /><span className="text-xs sm:text-sm">صورة/فيديو</span>
         </Button>
-        <Button variant="ghost" size="sm" className="gap-1.5 sm:gap-2" onClick={onStartLive}>
-          <Radio className="h-4 w-4 text-red-500" /><span className="text-xs sm:text-sm">بث مباشر</span>
+        <Button variant="ghost" size="sm" className="gap-1.5 sm:gap-2" onClick={() => { setOpen(true); setTimeout(() => setShowLiveUrl(true), 50); }}>
+          <RadioTower className="h-4 w-4 text-red-500" /><span className="text-xs sm:text-sm">بث m3u8</span>
         </Button>
         <Button variant="ghost" size="sm" className="gap-1.5 sm:gap-2" onClick={() => setOpen(true)}>
           <Smile className="h-4 w-4 text-yellow-500" /><span className="text-xs sm:text-sm">شعور</span>
@@ -209,7 +298,6 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
     <>
       {CompactBar}
 
-      {/* hidden inputs (live outside dialog so they keep refs) */}
       <input ref={imgRef} type="file" accept="image/*" hidden onChange={e => onFile(e.target.files?.[0] || null, "image")} />
       <input ref={vidRef} type="file" accept="video/*" hidden onChange={e => onFile(e.target.files?.[0] || null, "video")} />
 
@@ -228,7 +316,6 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
               const f = e.dataTransfer.files?.[0]; if (f) acceptFile(f);
             }}
           >
-            {/* User row + privacy */}
             <div className="flex items-center gap-3">
               <Avatar className="h-11 w-11">
                 <AvatarImage src={myProfile?.avatar_url ?? undefined} />
@@ -261,28 +348,51 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
               </div>
             </div>
 
-            {/* Text area / colored background */}
-            <div
-              className={`relative rounded-xl transition-all ${bgStyle ? "min-h-[220px] flex items-center justify-center p-6" : ""}`}
-              style={bgStyle ?? undefined}
-            >
-              <Textarea
-                ref={textRef}
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                onPaste={onPaste}
-                placeholder={feeling ? `تشعر بـ ${feeling}...` : "ماذا يدور في بالك؟"}
-                maxLength={5000}
-                className={
-                  bgStyle
-                    ? "border-0 bg-transparent resize-none text-center text-2xl font-bold focus-visible:ring-0 placeholder:text-white/70 min-h-[120px] [&]:text-[color:inherit]"
-                    : "min-h-[120px] resize-none border-0 bg-transparent text-lg focus-visible:ring-0 px-0"
-                }
-                style={bgStyle ? { color: bgStyle.color as string } : undefined}
-              />
+            <div className="relative">
+              <div
+                className={`relative rounded-xl transition-all ${bgStyle ? "min-h-[220px] flex items-center justify-center p-6" : ""}`}
+                style={bgStyle ?? undefined}
+              >
+                <Textarea
+                  ref={textRef}
+                  value={content}
+                  onChange={handleContentChange}
+                  onKeyDown={onKeyDownText}
+                  onPaste={onPaste}
+                  placeholder={feeling ? `تشعر بـ ${feeling}...` : "ماذا يدور في بالك؟ اكتب @ للإشارة أو # للوسم"}
+                  maxLength={5000}
+                  className={
+                    bgStyle
+                      ? "border-0 bg-transparent resize-none text-center text-2xl font-bold focus-visible:ring-0 placeholder:text-white/70 min-h-[120px] [&]:text-[color:inherit]"
+                      : "min-h-[120px] resize-none border-0 bg-transparent text-lg focus-visible:ring-0 px-0"
+                  }
+                  style={bgStyle ? { color: bgStyle.color as string } : undefined}
+                />
+              </div>
+
+              {mentionRes.length > 0 && (
+                <div className="absolute z-30 top-full mt-1 right-0 left-0 rounded-lg border bg-popover shadow-elegant overflow-hidden max-h-64 overflow-y-auto">
+                  {mentionRes.map((r, i) => (
+                    <button
+                      key={r.id}
+                      onMouseDown={(e) => { e.preventDefault(); applyMention(r); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-right hover:bg-muted transition-colors ${i === mentionIdx ? "bg-muted" : ""}`}
+                    >
+                      {r.id === "__followers__" ? (
+                        <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary"><Users className="h-4 w-4" /></div>
+                      ) : (
+                        <Avatar className="h-8 w-8"><AvatarImage src={r.avatar_url ?? undefined} /><AvatarFallback className="bg-brand-gradient text-primary-foreground text-xs">{(r.full_name || "K").slice(0, 2)}</AvatarFallback></Avatar>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate">{r.full_name || r.username}</p>
+                        <p className="text-xs text-muted-foreground truncate">@{r.username}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Char counter */}
             {content.length > 0 && (
               <div className="flex justify-end">
                 <span className={`text-[11px] ${content.length > 4500 ? "text-destructive" : "text-muted-foreground"}`}>
@@ -291,13 +401,11 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
               </div>
             )}
 
-            {/* Backgrounds */}
             {canUseBackground && (
               <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 pb-1">
                 <button
                   onClick={() => setBackground(null)}
                   className={`shrink-0 h-9 w-9 rounded-lg border-2 grid place-items-center ${!background ? "border-primary" : "border-transparent"} bg-muted`}
-                  title="بدون خلفية"
                   aria-label="بدون خلفية"
                 >
                   <Type className="h-4 w-4" />
@@ -308,14 +416,12 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
                     onClick={() => setBackground(b.id)}
                     className={`shrink-0 h-9 w-9 rounded-lg border-2 ${background === b.id ? "border-primary scale-110" : "border-transparent"} transition-transform`}
                     style={{ background: b.bg }}
-                    title="خلفية"
                     aria-label="اختيار خلفية"
                   />
                 ))}
               </div>
             )}
 
-            {/* Feeling chip */}
             {feeling && (
               <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs">
                 <span>تشعر بـ {feeling}</span>
@@ -323,22 +429,13 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
               </div>
             )}
 
-            {/* Location */}
             {showLocation && (
               <div className="flex gap-2">
-                <Input
-                  value={location}
-                  onChange={e => setLocation(e.target.value)}
-                  placeholder="📍 أين أنت؟"
-                  className="rounded-full"
-                />
-                <Button variant="ghost" size="icon" onClick={() => { setShowLocation(false); setLocation(""); }}>
-                  <X className="h-4 w-4" />
-                </Button>
+                <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="📍 أين أنت؟" className="rounded-full" />
+                <Button variant="ghost" size="icon" onClick={() => { setShowLocation(false); setLocation(""); }}><X className="h-4 w-4" /></Button>
               </div>
             )}
 
-            {/* Youtube */}
             {showYoutube && (
               <div className="flex gap-2">
                 <Input value={youtubeInput} onChange={e => setYoutubeInput(e.target.value)} placeholder="ألصق رابط يوتيوب هنا..." />
@@ -346,17 +443,41 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
               </div>
             )}
 
-            {/* Media preview / drag drop */}
+            {showLiveUrl && (
+              <div className="space-y-2 rounded-xl border border-red-500/40 bg-red-500/5 p-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-red-600">
+                  <RadioTower className="h-4 w-4" /> رابط بث مباشر (m3u8)
+                </div>
+                <div className="flex gap-2">
+                  <Input value={liveUrl} onChange={e => setLiveUrl(e.target.value)} placeholder="https://example.com/stream.m3u8" />
+                  <Button variant="ghost" size="icon" onClick={() => { setShowLiveUrl(false); setLiveUrl(""); }}><X className="h-4 w-4" /></Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">سيظهر البث كمنشور وفي منطقة الغلاف بملفك الشخصي حتى إيقافه.</p>
+              </div>
+            )}
+
             {mediaPreview ? (
-              <div className="relative rounded-xl overflow-hidden border">
-                {mediaType === "image" ? (
-                  <img src={mediaPreview} className="max-h-80 w-full object-cover" alt="" />
-                ) : (
-                  <video src={mediaPreview} controls className="max-h-80 w-full" />
+              <div className="space-y-2">
+                <div className="relative rounded-xl overflow-hidden border">
+                  {mediaType === "image" ? (
+                    <img src={mediaPreview} className="max-h-80 w-full object-cover" alt="" />
+                  ) : (
+                    <video src={mediaPreview} controls className="max-h-80 w-full" />
+                  )}
+                  <Button size="icon" variant="secondary" className="absolute top-2 left-2 rounded-full shadow" onClick={() => { setMediaFile(null); setMediaPreview(null); setMediaType(null); }}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {mediaType === "video" && (
+                  <div className="flex gap-2">
+                    <Button size="sm" variant={videoKind === "video" ? "default" : "outline"} onClick={() => setVideoKind("video")} className="flex-1 gap-2">
+                      <Video className="h-4 w-4" /> فيديو كيان
+                    </Button>
+                    <Button size="sm" variant={videoKind === "reel" ? "default" : "outline"} onClick={() => setVideoKind("reel")} className="flex-1 gap-2">
+                      <Video className="h-4 w-4" /> ريلز
+                    </Button>
+                  </div>
                 )}
-                <Button size="icon" variant="secondary" className="absolute top-2 left-2 rounded-full shadow" onClick={() => { setMediaFile(null); setMediaPreview(null); setMediaType(null); }}>
-                  <X className="h-4 w-4" />
-                </Button>
               </div>
             ) : (
               <AnimatePresence>
@@ -371,14 +492,12 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
               </AnimatePresence>
             )}
 
-            {/* Youtube preview */}
             {youtubeInput && extractYoutubeId(youtubeInput) && (
               <div className="aspect-video w-full rounded-xl overflow-hidden">
                 <iframe className="h-full w-full" src={`https://www.youtube.com/embed/${extractYoutubeId(youtubeInput)}`} allowFullScreen />
               </div>
             )}
 
-            {/* Action toolbar (sticky-ish inside scroll) */}
             <div className="rounded-xl border p-2 flex items-center justify-between flex-wrap gap-1">
               <span className="text-sm font-semibold ps-2">أضف إلى منشورك</span>
               <div className="flex items-center gap-0.5 flex-wrap">
@@ -390,6 +509,9 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
                 </Button>
                 <Button variant="ghost" size="icon" onClick={() => setShowYoutube(s => !s)} title="يوتيوب">
                   <Youtube className="h-5 w-5 text-red-600" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setShowLiveUrl(s => !s)} title="بث m3u8">
+                  <RadioTower className={`h-5 w-5 ${showLiveUrl ? "text-red-600" : "text-red-500"}`} />
                 </Button>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -410,9 +532,7 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
                     <div className="text-xs font-semibold mb-1 px-1 border-t pt-2">إدراج إيموجي</div>
                     <div className="grid grid-cols-8 gap-0.5 max-h-40 overflow-y-auto">
                       {EMOJIS.map((e, i) => (
-                        <button key={i} onClick={() => insertAtCursor(e)} className="text-lg rounded hover:bg-muted p-1">
-                          {e}
-                        </button>
+                        <button key={i} onClick={() => insertAtCursor(e)} className="text-lg rounded hover:bg-muted p-1">{e}</button>
                       ))}
                     </div>
                   </PopoverContent>
@@ -420,7 +540,7 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
                 <Button variant="ghost" size="icon" onClick={() => setShowLocation(s => !s)} title="الموقع">
                   <MapPin className="h-5 w-5 text-rose-500" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={onStartLive} title="بث مباشر">
+                <Button variant="ghost" size="icon" onClick={onStartLive} title="بث مباشر بالكاميرا">
                   <Radio className="h-5 w-5 text-red-500" />
                 </Button>
                 {canUseBackground && (
@@ -437,7 +557,7 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
           <DialogFooter className="p-4 border-t">
             <Button
               onClick={publish}
-              disabled={publishing || (!content.trim() && !mediaFile && !youtubeInput && !feeling)}
+              disabled={publishing || (!content.trim() && !mediaFile && !youtubeInput && !feeling && !liveUrl)}
               className="w-full rounded-lg bg-brand-gradient font-bold shadow-elegant"
             >
               {publishing ? <><Loader2 className="h-4 w-4 animate-spin ms-2" />جارٍ النشر... {progress}%</> : <><Send className="h-4 w-4 ms-2" />نشر</>}
