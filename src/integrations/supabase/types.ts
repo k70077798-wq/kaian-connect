@@ -551,6 +551,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_live: boolean
+          live_stream_url: string | null
           location: string | null
           media_type: string | null
           page_id: string | null
@@ -568,6 +569,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_live?: boolean
+          live_stream_url?: string | null
           location?: string | null
           media_type?: string | null
           page_id?: string | null
@@ -585,6 +587,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_live?: boolean
+          live_stream_url?: string | null
           location?: string | null
           media_type?: string | null
           page_id?: string | null
