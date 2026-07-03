@@ -27,9 +27,20 @@ export function SponsoredAd({ ad }: { ad: AdRow }) {
     supabase.rpc("ad_impression", { _id: ad.id });
   }, [ad.id]);
 
+  const normalizedUrl = (() => {
+    if (!ad.link_url) return null;
+    const raw = ad.link_url.trim();
+    if (!raw) return null;
+    try {
+      return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    } catch {
+      return null;
+    }
+  })();
+
   const onClick = async () => {
     await supabase.rpc("ad_click", { _id: ad.id });
-    if (ad.link_url) window.open(ad.link_url, "_blank", "noopener,noreferrer");
+    if (normalizedUrl) window.open(normalizedUrl.toString(), "_blank", "noopener,noreferrer");
   };
 
   const initials = (s?: string | null) => (s || "K").slice(0, 2).toUpperCase();
@@ -64,7 +75,7 @@ export function SponsoredAd({ ad }: { ad: AdRow }) {
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground truncate">
-          {ad.link_url ? new URL(ad.link_url).hostname.replace(/^www\./, "") : "إعلان مموّل"}
+          {normalizedUrl ? normalizedUrl.hostname.replace(/^www\./, "") : "إعلان مموّل"}
         </p>
         <Button size="sm" onClick={onClick} className="bg-brand-gradient text-primary-foreground border-0 gap-1">
           {ad.cta || "اعرف المزيد"}
