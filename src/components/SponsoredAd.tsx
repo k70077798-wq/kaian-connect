@@ -75,7 +75,7 @@ export function SponsoredAd({ ad }: { ad: AdRow }) {
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground truncate">
-          {ad.link_url ? new URL(ad.link_url).hostname.replace(/^www\./, "") : "إعلان مموّل"}
+          {normalizedUrl ? normalizedUrl.hostname.replace(/^www\./, "") : "إعلان مموّل"}
         </p>
         <Button size="sm" onClick={onClick} className="bg-brand-gradient text-primary-foreground border-0 gap-1">
           {ad.cta || "اعرف المزيد"}
