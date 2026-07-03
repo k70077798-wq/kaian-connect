@@ -24,12 +24,15 @@ import { AddFriendButton } from "@/components/AddFriendButton";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { PostComposer, backgroundStyle } from "@/components/PostComposer";
 import { SponsoredAd } from "@/components/SponsoredAd";
+import { PostContent } from "@/components/PostContent";
+import { HlsPlayer } from "@/components/HlsPlayer";
 import { Globe, Users as UsersIcon, Lock, MapPin } from "lucide-react";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
 interface Post {
   id: string; user_id: string; content: string | null; image_url: string | null;
-  video_url: string | null; youtube_url: string | null; media_type: string | null;
+  video_url: string | null; youtube_url: string | null; live_stream_url: string | null;
+  media_type: string | null;
   feeling: string | null; is_live: boolean | null; shares_count: number | null;
   background: string | null; privacy: string | null; location: string | null;
   created_at: string;
@@ -419,16 +422,22 @@ export function Feed() {
               </div>
 
               {post.content && (
-                post.background && !post.image_url && !post.video_url && !post.youtube_url ? (
+                post.background && !post.image_url && !post.video_url && !post.youtube_url && !post.live_stream_url ? (
                   <div
-                    className="mt-3 rounded-xl min-h-[220px] flex items-center justify-center p-6 text-center text-2xl font-bold whitespace-pre-wrap break-words"
+                    className="mt-3 rounded-xl min-h-[220px] flex items-center justify-center p-6 text-center text-2xl font-bold"
                     style={backgroundStyle(post.background) ?? undefined}
                   >
-                    {post.content}
+                    <PostContent text={post.content} postId={post.id} maxChars={200} />
                   </div>
                 ) : (
-                  <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                  <PostContent text={post.content} postId={post.id} className="mt-3 text-[15px] leading-relaxed" maxChars={350} />
                 )
+              )}
+              {post.live_stream_url && (
+                <div className="mt-3 relative rounded-xl overflow-hidden bg-black">
+                  <span className="absolute top-2 right-2 z-10 rounded bg-red-600 text-white text-xs px-2 py-0.5 font-bold animate-pulse">🔴 مباشر</span>
+                  <HlsPlayer src={post.live_stream_url} className="w-full aspect-video" muted={true} />
+                </div>
               )}
               {post.image_url && <img src={post.image_url} className="mt-3 w-full rounded-xl" alt="" />}
               {post.video_url && (
