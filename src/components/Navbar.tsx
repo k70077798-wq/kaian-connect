@@ -86,8 +86,9 @@ export function Navbar() {
             value={q}
             onChange={e => { setQ(e.target.value); setOpenSearch(true); }}
             onFocus={() => setOpenSearch(true)}
+            onKeyDown={e => { if (e.key === "Enter" && q.trim()) { navigate({ to: "/search", search: { q } as any }); setOpenSearch(false); } }}
             className="h-10 rounded-full bg-muted/60 pr-10 border-0"
-            placeholder="ابحث عن أصدقاء بالاسم أو اسم المستخدم..."
+            placeholder="ابحث عن مستخدم، هاشتاق، منشور..."
           />
           {openSearch && q.trim() && (
             <div className="absolute top-full mt-2 w-full rounded-xl border bg-popover shadow-elegant overflow-hidden z-50">
@@ -115,6 +116,14 @@ export function Navbar() {
                     </li>
                   ))}
                 </ul>
+              )}
+              {q.trim() && (
+                <button
+                  onClick={() => { navigate({ to: "/search", search: { q } as any }); setOpenSearch(false); }}
+                  className="w-full border-t px-3 py-2.5 text-sm font-semibold text-primary hover:bg-muted text-center"
+                >
+                  عرض جميع النتائج لـ "{q}"
+                </button>
               )}
             </div>
           )}

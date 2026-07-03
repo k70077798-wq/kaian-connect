@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppWatchRouteImport } from './routes/_app/watch'
 import { Route as AppWalletRouteImport } from './routes/_app/wallet'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppSearchRouteImport } from './routes/_app/search'
 import { Route as AppReelsRouteImport } from './routes/_app/reels'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppPagesRouteImport } from './routes/_app/pages'
@@ -28,7 +29,9 @@ import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAdsManagerRouteImport } from './routes/_app/ads-manager'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppProfileUserIdRouteImport } from './routes/_app/profile.$userId'
+import { Route as AppPostPostIdRouteImport } from './routes/_app/post.$postId'
 import { Route as AppPagesPageIdRouteImport } from './routes/_app/pages.$pageId'
+import { Route as AppHashtagTagRouteImport } from './routes/_app/hashtag.$tag'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -57,6 +60,11 @@ const AppWalletRoute = AppWalletRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSearchRoute = AppSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AppRoute,
 } as any)
 const AppReelsRoute = AppReelsRouteImport.update({
@@ -124,10 +132,20 @@ const AppProfileUserIdRoute = AppProfileUserIdRouteImport.update({
   path: '/$userId',
   getParentRoute: () => AppProfileRoute,
 } as any)
+const AppPostPostIdRoute = AppPostPostIdRouteImport.update({
+  id: '/post/$postId',
+  path: '/post/$postId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPagesPageIdRoute = AppPagesPageIdRouteImport.update({
   id: '/$pageId',
   path: '/$pageId',
   getParentRoute: () => AppPagesRoute,
+} as any)
+const AppHashtagTagRoute = AppHashtagTagRouteImport.update({
+  id: '/hashtag/$tag',
+  path: '/hashtag/$tag',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -145,10 +163,13 @@ export interface FileRoutesByFullPath {
   '/pages': typeof AppPagesRouteWithChildren
   '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
+  '/search': typeof AppSearchRoute
   '/settings': typeof AppSettingsRoute
   '/wallet': typeof AppWalletRoute
   '/watch': typeof AppWatchRoute
+  '/hashtag/$tag': typeof AppHashtagTagRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
+  '/post/$postId': typeof AppPostPostIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRoutesByTo {
@@ -166,10 +187,13 @@ export interface FileRoutesByTo {
   '/pages': typeof AppPagesRouteWithChildren
   '/profile': typeof AppProfileRouteWithChildren
   '/reels': typeof AppReelsRoute
+  '/search': typeof AppSearchRoute
   '/settings': typeof AppSettingsRoute
   '/wallet': typeof AppWalletRoute
   '/watch': typeof AppWatchRoute
+  '/hashtag/$tag': typeof AppHashtagTagRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
+  '/post/$postId': typeof AppPostPostIdRoute
   '/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRoutesById {
@@ -189,10 +213,13 @@ export interface FileRoutesById {
   '/_app/pages': typeof AppPagesRouteWithChildren
   '/_app/profile': typeof AppProfileRouteWithChildren
   '/_app/reels': typeof AppReelsRoute
+  '/_app/search': typeof AppSearchRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/wallet': typeof AppWalletRoute
   '/_app/watch': typeof AppWatchRoute
+  '/_app/hashtag/$tag': typeof AppHashtagTagRoute
   '/_app/pages/$pageId': typeof AppPagesPageIdRoute
+  '/_app/post/$postId': typeof AppPostPostIdRoute
   '/_app/profile/$userId': typeof AppProfileUserIdRoute
 }
 export interface FileRouteTypes {
@@ -212,10 +239,13 @@ export interface FileRouteTypes {
     | '/pages'
     | '/profile'
     | '/reels'
+    | '/search'
     | '/settings'
     | '/wallet'
     | '/watch'
+    | '/hashtag/$tag'
     | '/pages/$pageId'
+    | '/post/$postId'
     | '/profile/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -233,10 +263,13 @@ export interface FileRouteTypes {
     | '/pages'
     | '/profile'
     | '/reels'
+    | '/search'
     | '/settings'
     | '/wallet'
     | '/watch'
+    | '/hashtag/$tag'
     | '/pages/$pageId'
+    | '/post/$postId'
     | '/profile/$userId'
   id:
     | '__root__'
@@ -255,10 +288,13 @@ export interface FileRouteTypes {
     | '/_app/pages'
     | '/_app/profile'
     | '/_app/reels'
+    | '/_app/search'
     | '/_app/settings'
     | '/_app/wallet'
     | '/_app/watch'
+    | '/_app/hashtag/$tag'
     | '/_app/pages/$pageId'
+    | '/_app/post/$postId'
     | '/_app/profile/$userId'
   fileRoutesById: FileRoutesById
 }
@@ -310,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/search': {
+      id: '/_app/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AppSearchRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/reels': {
@@ -403,12 +446,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileUserIdRouteImport
       parentRoute: typeof AppProfileRoute
     }
+    '/_app/post/$postId': {
+      id: '/_app/post/$postId'
+      path: '/post/$postId'
+      fullPath: '/post/$postId'
+      preLoaderRoute: typeof AppPostPostIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/pages/$pageId': {
       id: '/_app/pages/$pageId'
       path: '/$pageId'
       fullPath: '/pages/$pageId'
       preLoaderRoute: typeof AppPagesPageIdRouteImport
       parentRoute: typeof AppPagesRoute
+    }
+    '/_app/hashtag/$tag': {
+      id: '/_app/hashtag/$tag'
+      path: '/hashtag/$tag'
+      fullPath: '/hashtag/$tag'
+      preLoaderRoute: typeof AppHashtagTagRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
@@ -450,9 +507,12 @@ interface AppRouteChildren {
   AppPagesRoute: typeof AppPagesRouteWithChildren
   AppProfileRoute: typeof AppProfileRouteWithChildren
   AppReelsRoute: typeof AppReelsRoute
+  AppSearchRoute: typeof AppSearchRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppWalletRoute: typeof AppWalletRoute
   AppWatchRoute: typeof AppWatchRoute
+  AppHashtagTagRoute: typeof AppHashtagTagRoute
+  AppPostPostIdRoute: typeof AppPostPostIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -468,9 +528,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppPagesRoute: AppPagesRouteWithChildren,
   AppProfileRoute: AppProfileRouteWithChildren,
   AppReelsRoute: AppReelsRoute,
+  AppSearchRoute: AppSearchRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppWalletRoute: AppWalletRoute,
   AppWatchRoute: AppWatchRoute,
+  AppHashtagTagRoute: AppHashtagTagRoute,
+  AppPostPostIdRoute: AppPostPostIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -483,13 +546,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

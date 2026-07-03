@@ -13,6 +13,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { PostComposer } from "@/components/PostComposer";
 import { UserPostsList } from "@/components/UserPostsList";
 import { Pencil, MapPin, Home as HomeIcon, Heart, Camera, Loader2, LayoutGrid, List as ListIcon, Filter, Settings2, Link2, Briefcase, ChevronDown, BarChart3 } from "lucide-react";
+import { HlsPlayer } from "@/components/HlsPlayer";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/profile")({ component: ProfilePage });
@@ -129,7 +130,16 @@ function ProfilePage() {
       {/* Cover + header */}
       <Card className="overflow-hidden shadow-card rounded-none sm:rounded-2xl">
         <div className="h-52 sm:h-80 bg-brand-gradient relative">
-          {profile.cover_url && <img src={profile.cover_url} className="absolute inset-0 w-full h-full object-cover" alt="" />}
+          {(() => {
+            const live = posts.find((p: any) => p.is_live && p.live_stream_url);
+            if (live) return (
+              <>
+                <HlsPlayer src={live.live_stream_url} className="absolute inset-0 w-full h-full object-cover" muted={true} />
+                <span className="absolute top-3 right-3 z-10 rounded bg-red-600 text-white text-xs px-2 py-1 font-bold animate-pulse">🔴 بث مباشر الآن</span>
+              </>
+            );
+            return profile.cover_url ? <img src={profile.cover_url} className="absolute inset-0 w-full h-full object-cover" alt="" /> : null;
+          })()}
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
           <Button
             onClick={() => coverRef.current?.click()}
