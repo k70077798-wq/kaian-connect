@@ -248,14 +248,14 @@ function ProfilePage() {
                 <Card className="p-5 shadow-card">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-bold">الأصدقاء · {friendsCount}</h3>
-                    <button className="text-xs text-primary">عرض الكل</button>
+                    <Link to="/friends" className="text-xs text-primary hover:underline">عرض الكل</Link>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {friendsList.slice(0, 9).map(f => (
-                      <div key={f.id} className="flex flex-col items-center gap-1">
+                      <Link key={f.id} to="/profile/$userId" params={{ userId: f.id }} className="flex flex-col items-center gap-1 hover:opacity-80 transition">
                         <Avatar className="h-16 w-16 rounded-lg"><AvatarImage src={f.avatar_url ?? undefined} className="rounded-lg" /><AvatarFallback className="rounded-lg bg-muted">{(f.full_name || "K").slice(0, 2)}</AvatarFallback></Avatar>
                         <span className="text-[11px] truncate w-full text-center">{f.full_name}</span>
-                      </div>
+                      </Link>
                     ))}
                     {friendsList.length === 0 && <p className="col-span-3 text-xs text-muted-foreground text-center py-3">لا يوجد أصدقاء بعد</p>}
                   </div>
