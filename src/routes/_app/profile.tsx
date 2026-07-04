@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,7 @@ function ProfilePage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [editOpen, setEditOpen] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [link, setLink] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -95,6 +96,7 @@ function ProfilePage() {
 
   const openEdit = () => {
     setFullName(profile?.full_name || "");
+    setUsername(profile?.username || "");
     setBio(profile?.bio || "");
     setLink((profile as any)?.link || "");
     setEditOpen(true);
@@ -102,11 +104,20 @@ function ProfilePage() {
 
   const saveProfile = async () => {
     if (savingProfile) return;
+    const uname = username.trim();
+    if (uname && !/^[A-Za-z0-9_]{2,32}$/.test(uname)) {
+      return toast.error("اسم المستخدم: حروف إنجليزية/أرقام/شرطة سفلية فقط (2-32)");
+    }
     setSavingProfile(true);
-    const { error } = await supabase.from("profiles").update({ full_name: fullName, bio }).eq("id", user!.id);
+    const payload: any = { full_name: fullName, bio };
+    if (uname && uname !== profile?.username) payload.username = uname;
+    const { error } = await supabase.from("profiles").update(payload).eq("id", user!.id);
     setSavingProfile(false);
-    if (error) return toast.error("تعذر الحفظ");
-    setProfile((p: any) => ({ ...p, full_name: fullName, bio }));
+    if (error) {
+      if ((error as any).code === "23505") return toast.error("اسم المستخدم مستخدم مسبقاً");
+      return toast.error("تعذر الحفظ");
+    }
+    setProfile((p: any) => ({ ...p, ...payload }));
     setEditOpen(false);
     toast.success("تم الحفظ");
   };
@@ -176,9 +187,9 @@ function ProfilePage() {
               {profile.verified && <VerifiedBadge style={vStyle} size={26} />}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              <b className="text-foreground">{followersCount.toLocaleString("ar")}</b> متابعون
+              <Link to="/friends" className="hover:underline"><b className="text-foreground">{followersCount.toLocaleString("ar")}</b> متابعون</Link>
               <span className="mx-2">·</span>
-              <b className="text-foreground">{friendsCount.toLocaleString("ar")}</b> صديق
+              <Link to="/friends" className="hover:underline"><b className="text-foreground">{friendsCount.toLocaleString("ar")}</b> صديق</Link>
             </p>
             <div className="mt-2 flex items-center justify-center sm:justify-start gap-3 text-xs text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />Sanaa</span>
@@ -237,14 +248,14 @@ function ProfilePage() {
                 <Card className="p-5 shadow-card">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-bold">الأصدقاء · {friendsCount}</h3>
-                    <button className="text-xs text-primary">عرض الكل</button>
+                    <Link to="/friends" className="text-xs text-primary hover:underline">عرض الكل</Link>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {friendsList.slice(0, 9).map(f => (
-                      <div key={f.id} className="flex flex-col items-center gap-1">
+                      <Link key={f.id} to="/profile/$userId" params={{ userId: f.id }} className="flex flex-col items-center gap-1 hover:opacity-80 transition">
                         <Avatar className="h-16 w-16 rounded-lg"><AvatarImage src={f.avatar_url ?? undefined} className="rounded-lg" /><AvatarFallback className="rounded-lg bg-muted">{(f.full_name || "K").slice(0, 2)}</AvatarFallback></Avatar>
                         <span className="text-[11px] truncate w-full text-center">{f.full_name}</span>
-                      </div>
+                      </Link>
                     ))}
                     {friendsList.length === 0 && <p className="col-span-3 text-xs text-muted-foreground text-center py-3">لا يوجد أصدقاء بعد</p>}
                   </div>
@@ -347,8 +358,16 @@ function ProfilePage() {
               <Input value={fullName} onChange={e => setFullName(e.target.value)} />
             </div>
             <div>
+              <label className="text-sm font-semibold">اسم المستخدم</label>
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground">@</span>
+                <Input value={username} onChange={e => setUsername(e.target.value)} placeholder="username" />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">حروف إنجليزية وأرقام و_ فقط (2-32)</p>
+            </div>
+            <div>
               <label className="text-sm font-semibold">نبذة</label>
-              <Textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} />
+              <Textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="عرّف عن نفسك..." />
             </div>
           </div>
           <DialogFooter>
