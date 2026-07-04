@@ -96,6 +96,7 @@ function ProfilePage() {
 
   const openEdit = () => {
     setFullName(profile?.full_name || "");
+    setUsername(profile?.username || "");
     setBio(profile?.bio || "");
     setLink((profile as any)?.link || "");
     setEditOpen(true);
@@ -103,11 +104,20 @@ function ProfilePage() {
 
   const saveProfile = async () => {
     if (savingProfile) return;
+    const uname = username.trim();
+    if (uname && !/^[A-Za-z0-9_]{2,32}$/.test(uname)) {
+      return toast.error("اسم المستخدم: حروف إنجليزية/أرقام/شرطة سفلية فقط (2-32)");
+    }
     setSavingProfile(true);
-    const { error } = await supabase.from("profiles").update({ full_name: fullName, bio }).eq("id", user!.id);
+    const payload: any = { full_name: fullName, bio };
+    if (uname && uname !== profile?.username) payload.username = uname;
+    const { error } = await supabase.from("profiles").update(payload).eq("id", user!.id);
     setSavingProfile(false);
-    if (error) return toast.error("تعذر الحفظ");
-    setProfile((p: any) => ({ ...p, full_name: fullName, bio }));
+    if (error) {
+      if ((error as any).code === "23505") return toast.error("اسم المستخدم مستخدم مسبقاً");
+      return toast.error("تعذر الحفظ");
+    }
+    setProfile((p: any) => ({ ...p, ...payload }));
     setEditOpen(false);
     toast.success("تم الحفظ");
   };
