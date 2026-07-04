@@ -358,8 +358,16 @@ function ProfilePage() {
               <Input value={fullName} onChange={e => setFullName(e.target.value)} />
             </div>
             <div>
+              <label className="text-sm font-semibold">اسم المستخدم</label>
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground">@</span>
+                <Input value={username} onChange={e => setUsername(e.target.value)} placeholder="username" />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">حروف إنجليزية وأرقام و_ فقط (2-32)</p>
+            </div>
+            <div>
               <label className="text-sm font-semibold">نبذة</label>
-              <Textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} />
+              <Textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="عرّف عن نفسك..." />
             </div>
           </div>
           <DialogFooter>
