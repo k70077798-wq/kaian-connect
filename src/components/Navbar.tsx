@@ -74,7 +74,9 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-card/80 backdrop-blur-xl shadow-card">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
         <Link to="/home" className="flex items-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-gradient text-primary-foreground font-black shadow-elegant">K</div>
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-white p-0.5 shadow-elegant ring-1 ring-primary/20">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh8iH2aqvCzmEns7KC2YENagCnERIJOCzCHQk5ZkHIoGpf3pBNUwRj2LlMXr8r7NI2JFNWClKqPqtUoIu3kfxW-iYfogd0JPiZP9C5zm0gGkhUFRT-2fAmjmB3izc1mj2JzPQ0Jw0pK4aMGrMV-_J5vSbl3wh1IqshyaIDUDZ_TFNZVDajmZ6gCr9zSj10/s320/%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A7%D9%A0%D9%A3_%D9%A2%D9%A1%D9%A4%D9%A2%D9%A0%D9%A3.png" alt="KAIAN" className="h-full w-full object-contain" />
+          </div>
           <span className="hidden text-xl font-extrabold tracking-tight sm:inline">
             KAI<span className="text-primary">A</span>N
           </span>
