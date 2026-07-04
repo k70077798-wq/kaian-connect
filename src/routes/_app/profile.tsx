@@ -187,9 +187,9 @@ function ProfilePage() {
               {profile.verified && <VerifiedBadge style={vStyle} size={26} />}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              <b className="text-foreground">{followersCount.toLocaleString("ar")}</b> متابعون
+              <Link to="/friends" className="hover:underline"><b className="text-foreground">{followersCount.toLocaleString("ar")}</b> متابعون</Link>
               <span className="mx-2">·</span>
-              <b className="text-foreground">{friendsCount.toLocaleString("ar")}</b> صديق
+              <Link to="/friends" className="hover:underline"><b className="text-foreground">{friendsCount.toLocaleString("ar")}</b> صديق</Link>
             </p>
             <div className="mt-2 flex items-center justify-center sm:justify-start gap-3 text-xs text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />Sanaa</span>
