@@ -28,6 +28,7 @@ function ProfilePage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [editOpen, setEditOpen] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [link, setLink] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
