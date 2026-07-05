@@ -10,21 +10,37 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Sparkles, Users, MessageCircle, Zap } from "lucide-react";
 
-export const Route = createFileRoute("/")({ component: WelcomePage });
+export const Route = createFileRoute("/")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
+  component: WelcomePage,
+});
 
 const LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh8iH2aqvCzmEns7KC2YENagCnERIJOCzCHQk5ZkHIoGpf3pBNUwRj2LlMXr8r7NI2JFNWClKqPqtUoIu3kfxW-iYfogd0JPiZP9C5zm0gGkhUFRT-2fAmjmB3izc1mj2JzPQ0Jw0pK4aMGrMV-_J5vSbl3wh1IqshyaIDUDZ_TFNZVDajmZ6gCr9zSj10/s320/%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A7%D9%A0%D9%A3_%D9%A2%D9%A1%D9%A4%D9%A2%D9%A0%D9%A3.png";
 const HERO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgbyUS-EUAeNo2fwIeaFaibkJS6YkDs5z4QQKeqVXUknyT6cMk3kYiyyIZqsgGEjwi4a1BdH4BOV-6WhthAKwH1Fq1OPWCCD6XKAx2BVr73Kxm2DZ17HaC_S0feiv2_lCXDXqb-vppwn7zFOmjVlUKlF2MigTciIDDFEsIVaTRnm2NYOdr0K9C7Bek3yWI/s320/%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A7%D9%A0%D9%A3_%D9%A2%D9%A1%D9%A4%D9%A1%D9%A0%D9%A6.png";
 
+// Only allow same-origin relative paths as `next`, per Lovable OAuth consent guidance.
+function safeNext(next: string | undefined): string | null {
+  if (!next) return null;
+  if (!next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
 function WelcomePage() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && session) navigate({ to: "/home" });
-  }, [loading, session]);
+    if (loading || !session) return;
+    const target = safeNext(next);
+    if (target) window.location.assign(target);
+    else navigate({ to: "/home" });
+  }, [loading, session, next]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +49,9 @@ function WelcomePage() {
     setSubmitting(false);
     if (error) return toast.error("بيانات الدخول غير صحيحة");
     toast.success("مرحباً بعودتك!");
-    navigate({ to: "/home" });
+    const target = safeNext(next);
+    if (target) window.location.assign(target);
+    else navigate({ to: "/home" });
   };
 
   return (
