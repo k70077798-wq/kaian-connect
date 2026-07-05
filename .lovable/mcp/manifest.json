@@ -3,12 +3,16 @@
   "sdk_version": "0.20.0",
   "path": "/mcp",
   "auth": {
-    "type": "none"
+    "type": "oauth",
+    "issuer": "https://akxlyqdsmnitdabazuny.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
   },
   "mcp": {
     "server": {
       "name": "kaian-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "KAIAN"
     },
     "tools": [
@@ -175,6 +179,170 @@
               "maximum": 50
             }
           }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_post",
+        "title": "Create post",
+        "description": "Publish a new post to KAIAN as the signed-in user. Optionally attach an image or video URL previously uploaded via upload_media, or a live m3u8 stream URL.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 5000,
+              "description": "Post text. Supports #hashtags and @mentions."
+            },
+            "privacy": {
+              "default": "public",
+              "description": "Who can see the post.",
+              "type": "string",
+              "enum": [
+                "public",
+                "friends",
+                "private"
+              ]
+            },
+            "image_url": {
+              "description": "URL of an image attachment.",
+              "type": "string",
+              "format": "uri"
+            },
+            "video_url": {
+              "description": "URL of a video attachment.",
+              "type": "string",
+              "format": "uri"
+            },
+            "media_type": {
+              "description": "If video_url is set, whether it is a normal video or a Reel.",
+              "type": "string",
+              "enum": [
+                "video",
+                "reel"
+              ]
+            },
+            "live_stream_url": {
+              "description": "Optional .m3u8 live stream URL. When provided, the post is marked as live.",
+              "type": "string",
+              "format": "uri"
+            },
+            "feeling": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "location": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          "required": [
+            "content"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "like_post",
+        "title": "Like or unlike a post",
+        "description": "Toggle a like on a KAIAN post as the signed-in user. If the user already liked the post, the like is removed.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "post_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The UUID of the post to like."
+            }
+          },
+          "required": [
+            "post_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "comment_post",
+        "title": "Comment on a post",
+        "description": "Add a comment to a KAIAN post as the signed-in user. Supports @mentions and #hashtags.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "post_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The UUID of the post."
+            },
+            "content": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "description": "Comment text."
+            }
+          },
+          "required": [
+            "post_id",
+            "content"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "upload_media",
+        "title": "Upload media",
+        "description": "Upload an image or short video to KAIAN storage as the signed-in user. Returns a public URL that can be attached to a post via create_post's image_url or video_url. Max 15 MB.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "filename": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "description": "Original filename (used only for extension hint)."
+            },
+            "mime_type": {
+              "type": "string",
+              "minLength": 1,
+              "description": "MIME type. Supported: image/jpeg, image/png, image/webp, image/gif, video/mp4, video/webm, video/quicktime."
+            },
+            "data_base64": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Base64-encoded file bytes (no data: prefix)."
+            }
+          },
+          "required": [
+            "filename",
+            "mime_type",
+            "data_base64"
+          ]
         },
         "outputSchema": null
       }

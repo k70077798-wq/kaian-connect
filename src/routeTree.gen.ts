@@ -36,6 +36,7 @@ import { Route as AppPostPostIdRouteImport } from './routes/_app/post.$postId'
 import { Route as AppPagesPageIdRouteImport } from './routes/_app/pages.$pageId'
 import { Route as AppHashtagTagRouteImport } from './routes/_app/hashtag.$tag'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -174,6 +175,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/wallet': typeof AppWalletRoute
   '/watch': typeof AppWatchRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/hashtag/$tag': typeof AppHashtagTagRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/wallet': typeof AppWalletRoute
   '/watch': typeof AppWatchRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/hashtag/$tag': typeof AppHashtagTagRoute
   '/pages/$pageId': typeof AppPagesPageIdRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/wallet': typeof AppWalletRoute
   '/_app/watch': typeof AppWatchRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_app/hashtag/$tag': typeof AppHashtagTagRoute
   '/_app/pages/$pageId': typeof AppPagesPageIdRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/wallet'
     | '/watch'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/hashtag/$tag'
     | '/pages/$pageId'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/wallet'
     | '/watch'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/hashtag/$tag'
     | '/pages/$pageId'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/wallet'
     | '/_app/watch'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_app/hashtag/$tag'
     | '/_app/pages/$pageId'
@@ -356,6 +368,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
@@ -550,6 +563,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -629,6 +649,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
