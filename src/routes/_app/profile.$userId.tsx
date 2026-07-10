@@ -88,9 +88,11 @@ function UserProfilePage() {
 
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start sm:mb-2">
             <AddFriendButton userId={userId} size="default" />
-            <Button variant="outline" className="gap-2" onClick={() => navigate({ to: "/messages" })}>
-              <MessageCircle className="h-4 w-4" />مراسلة
-            </Button>
+            {user && friends.some((f: any) => f.id === user.id) && (
+              <Button variant="outline" className="gap-2" onClick={openMessage}>
+                <MessageCircle className="h-4 w-4" />مراسلة
+              </Button>
+            )}
           </div>
         </div>
 
