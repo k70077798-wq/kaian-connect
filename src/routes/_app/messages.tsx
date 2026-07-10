@@ -134,13 +134,19 @@ function MessagesPage() {
       setShowNew(false);
       return;
     }
-    const { data: c, error } = await supabase.from("conversations").insert({ created_by: user.id, is_group: false }).select().single();
-    if (error || !c) { toast.error("تعذّر إنشاء المحادثة"); return; }
-    await supabase.from("conversation_members").insert([
-      { conversation_id: c.id, user_id: user.id },
-      { conversation_id: c.id, user_id: peer.id },
+    // NOTE: generate the id client-side and skip .select().single(),
+    // because the conversations SELECT policy requires membership — which
+    // isn't true until the members insert below. Reading the just-inserted
+    // row otherwise fails with "تعذّر إنشاء المحادثة".
+    const convId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const { error: e1 } = await supabase.from("conversations").insert({ id: convId, created_by: user.id, is_group: false });
+    if (e1) { toast.error("تعذّر إنشاء المحادثة"); return; }
+    const { error: e2 } = await supabase.from("conversation_members").insert([
+      { conversation_id: convId, user_id: user.id },
+      { conversation_id: convId, user_id: peer.id },
     ]);
-    setActiveId(c.id);
+    if (e2) { toast.error("تعذّر إضافة الأعضاء"); return; }
+    setActiveId(convId);
     setShowNew(false);
   };
 

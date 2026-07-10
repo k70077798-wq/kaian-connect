@@ -61,14 +61,17 @@ function UserProfilePage() {
         if (direct && direct[0]) { navigate({ to: "/messages", search: { c: direct[0].id } }); return; }
       }
     }
-    const { data: c, error } = await supabase.from("conversations")
-      .insert({ created_by: user.id, is_group: false }).select().single();
-    if (error || !c) return;
-    await supabase.from("conversation_members").insert([
-      { conversation_id: c.id, user_id: user.id },
-      { conversation_id: c.id, user_id: userId },
+    // Client-side id: SELECT policy on conversations requires membership,
+    // so `.select().single()` after insert would fail. Insert then add members.
+    const convId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const { error: e1 } = await supabase.from("conversations").insert({ id: convId, created_by: user.id, is_group: false });
+    if (e1) return;
+    const { error: e2 } = await supabase.from("conversation_members").insert([
+      { conversation_id: convId, user_id: user.id },
+      { conversation_id: convId, user_id: userId },
     ]);
-    navigate({ to: "/messages", search: { c: c.id } });
+    if (e2) return;
+    navigate({ to: "/messages", search: { c: convId } });
   };
 
   if (loading) return <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;

@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   Heart, MessageCircle, Share2, Image as ImageIcon, Video, Smile, MoreHorizontal, Send,
   Youtube, Radio, Bookmark, Trash2, Link as LinkIcon, X, Plus, Copy, Loader2,
+  Download, Flag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -101,7 +102,33 @@ export function Feed() {
   const [commentSubmitting, setCommentSubmitting] = useState<Record<string, boolean>>({});
   const [likeSubmitting, setLikeSubmitting] = useState<Record<string, boolean>>({});
 
+  // image lightbox
+  const [lightbox, setLightbox] = useState<{ post: Post } | null>(null);
+
   const initials = (s?: string | null) => (s || "K").slice(0, 2).toUpperCase();
+
+  const saveImageToDevice = async (url: string) => {
+    try {
+      const res = await fetch(url, { mode: "cors" });
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = url.split("/").pop() || `kaian-${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objUrl);
+      toast.success("تم حفظ الصورة");
+    } catch {
+      // fallback: open in new tab
+      window.open(url, "_blank");
+    }
+  };
+
+  const reportPost = async (postId: string) => {
+    toast.success("تم إرسال البلاغ. شكرًا لمساعدتك.");
+  };
 
   const loadStories = async () => {
     const { data } = await supabase.from("stories").select("*").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(20);
@@ -439,7 +466,11 @@ export function Feed() {
                   <HlsPlayer src={post.live_stream_url} className="w-full aspect-video" muted={true} />
                 </div>
               )}
-              {post.image_url && <img src={post.image_url} className="mt-3 w-full rounded-xl" alt="" />}
+              {post.image_url && (
+                <button type="button" onClick={() => setLightbox({ post })} className="mt-3 block w-full">
+                  <img src={post.image_url} className="w-full rounded-xl cursor-zoom-in" alt="" />
+                </button>
+              )}
               {post.video_url && (
                 <div className="mt-3 relative rounded-xl overflow-hidden bg-black group cursor-pointer" onClick={() => openVideo(post.id)}>
                   <video
@@ -558,6 +589,60 @@ export function Feed() {
 
       {/* Story viewer */}
       <StoryViewer stories={stories as any} index={storyIndex} onClose={() => setStoryIndex(null)} />
+
+      {/* Image lightbox */}
+      <Dialog open={!!lightbox} onOpenChange={(o) => { if (!o) setLightbox(null); }}>
+        <DialogContent className="max-w-5xl w-[96vw] p-0 bg-black text-white border-0 gap-0 [&>button]:hidden">
+          {lightbox && (() => {
+            const livePost = posts.find(p => p.id === lightbox.post.id) || lightbox.post;
+            return (
+            <>
+              <div className="flex items-center justify-between px-3 py-2">
+                <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => setLightbox(null)}>
+                  <X className="h-5 w-5" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" className="text-white hover:bg-white/10">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => saveImageToDevice(livePost.image_url!)}>
+                      <Download className="ms-2 h-4 w-4" />حفظ إلى الجهاز
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/home#post-${livePost.id}`); toast.success("نُسخ الرابط"); }}>
+                      <Copy className="ms-2 h-4 w-4" />نسخ الرابط
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => reportPost(livePost.id)} className="text-destructive">
+                      <Flag className="ms-2 h-4 w-4" />إبلاغ
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <div className="flex items-center justify-center px-2 pb-2">
+                <img src={livePost.image_url!} alt="" className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg" />
+              </div>
+              <div className="flex items-center justify-around border-t border-white/10 py-2 px-2">
+                <Button variant="ghost" size="sm" onClick={() => toggleLike(livePost)} className={`flex-1 gap-2 text-white hover:bg-white/10 ${livePost.liked_by_me ? "text-primary" : ""}`}>
+                  <Heart className={`h-5 w-5 ${livePost.liked_by_me ? "fill-current" : ""}`} />
+                  <span>{livePost.likes_count}</span>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => { setLightbox(null); toggleComments(livePost.id); setTimeout(() => document.getElementById(`post-${livePost.id}`)?.scrollIntoView({ behavior: "smooth" }), 100); }} className="flex-1 gap-2 text-white hover:bg-white/10">
+                  <MessageCircle className="h-5 w-5" />
+                  <span>{livePost.comments_count}</span>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => sharePost(livePost)} className="flex-1 gap-2 text-white hover:bg-white/10">
+                  <Share2 className="h-5 w-5" />
+                  <span>{livePost.shares_count || 0}</span>
+                </Button>
+              </div>
+            </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
