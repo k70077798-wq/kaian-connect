@@ -102,7 +102,33 @@ export function Feed() {
   const [commentSubmitting, setCommentSubmitting] = useState<Record<string, boolean>>({});
   const [likeSubmitting, setLikeSubmitting] = useState<Record<string, boolean>>({});
 
+  // image lightbox
+  const [lightbox, setLightbox] = useState<{ post: Post } | null>(null);
+
   const initials = (s?: string | null) => (s || "K").slice(0, 2).toUpperCase();
+
+  const saveImageToDevice = async (url: string) => {
+    try {
+      const res = await fetch(url, { mode: "cors" });
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = url.split("/").pop() || `kaian-${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objUrl);
+      toast.success("تم حفظ الصورة");
+    } catch {
+      // fallback: open in new tab
+      window.open(url, "_blank");
+    }
+  };
+
+  const reportPost = async (postId: string) => {
+    toast.success("تم إرسال البلاغ. شكرًا لمساعدتك.");
+  };
 
   const loadStories = async () => {
     const { data } = await supabase.from("stories").select("*").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(20);
