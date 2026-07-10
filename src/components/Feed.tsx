@@ -466,7 +466,11 @@ export function Feed() {
                   <HlsPlayer src={post.live_stream_url} className="w-full aspect-video" muted={true} />
                 </div>
               )}
-              {post.image_url && <img src={post.image_url} className="mt-3 w-full rounded-xl" alt="" />}
+              {post.image_url && (
+                <button type="button" onClick={() => setLightbox({ post })} className="mt-3 block w-full">
+                  <img src={post.image_url} className="w-full rounded-xl cursor-zoom-in" alt="" />
+                </button>
+              )}
               {post.video_url && (
                 <div className="mt-3 relative rounded-xl overflow-hidden bg-black group cursor-pointer" onClick={() => openVideo(post.id)}>
                   <video
