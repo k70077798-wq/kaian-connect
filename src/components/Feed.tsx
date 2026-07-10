@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   Heart, MessageCircle, Share2, Image as ImageIcon, Video, Smile, MoreHorizontal, Send,
   Youtube, Radio, Bookmark, Trash2, Link as LinkIcon, X, Plus, Copy, Loader2,
+  Download, Flag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
