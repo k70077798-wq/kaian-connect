@@ -44,6 +44,33 @@ function UserProfilePage() {
     })();
   }, [userId, user?.id]);
 
+  const openMessage = async () => {
+    if (!user) return;
+    // find existing direct conversation between user and this profile
+    const { data: myMemberships } = await supabase
+      .from("conversation_members").select("conversation_id").eq("user_id", user.id);
+    const myIds = (myMemberships || []).map((m: any) => m.conversation_id);
+    if (myIds.length) {
+      const { data: shared } = await supabase
+        .from("conversation_members").select("conversation_id")
+        .eq("user_id", userId).in("conversation_id", myIds);
+      const sharedIds = (shared || []).map((s: any) => s.conversation_id);
+      if (sharedIds.length) {
+        const { data: direct } = await supabase
+          .from("conversations").select("id").in("id", sharedIds).eq("is_group", false).limit(1);
+        if (direct && direct[0]) { navigate({ to: "/messages", search: { c: direct[0].id } }); return; }
+      }
+    }
+    const { data: c, error } = await supabase.from("conversations")
+      .insert({ created_by: user.id, is_group: false }).select().single();
+    if (error || !c) return;
+    await supabase.from("conversation_members").insert([
+      { conversation_id: c.id, user_id: user.id },
+      { conversation_id: c.id, user_id: userId },
+    ]);
+    navigate({ to: "/messages", search: { c: c.id } });
+  };
+
   if (loading) return <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
   if (!profile) return <Card className="p-12 text-center text-muted-foreground mx-auto max-w-2xl mt-6">المستخدم غير موجود</Card>;
 
