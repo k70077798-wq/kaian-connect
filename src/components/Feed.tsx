@@ -589,6 +589,57 @@ export function Feed() {
 
       {/* Story viewer */}
       <StoryViewer stories={stories as any} index={storyIndex} onClose={() => setStoryIndex(null)} />
+
+      {/* Image lightbox */}
+      <Dialog open={!!lightbox} onOpenChange={(o) => { if (!o) setLightbox(null); }}>
+        <DialogContent className="max-w-5xl w-[96vw] p-0 bg-black text-white border-0 gap-0 [&>button]:hidden">
+          {lightbox && (
+            <>
+              <div className="flex items-center justify-between px-3 py-2">
+                <Button size="icon" variant="ghost" className="text-white hover:bg-white/10" onClick={() => setLightbox(null)}>
+                  <X className="h-5 w-5" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" className="text-white hover:bg-white/10">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => saveImageToDevice(lightbox.post.image_url!)}>
+                      <Download className="ms-2 h-4 w-4" />حفظ إلى الجهاز
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/home#post-${lightbox.post.id}`); toast.success("نُسخ الرابط"); }}>
+                      <Copy className="ms-2 h-4 w-4" />نسخ الرابط
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => reportPost(lightbox.post.id)} className="text-destructive">
+                      <Flag className="ms-2 h-4 w-4" />إبلاغ
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <div className="flex items-center justify-center px-2 pb-2">
+                <img src={lightbox.post.image_url!} alt="" className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg" />
+              </div>
+              <div className="flex items-center justify-around border-t border-white/10 py-2 px-2">
+                <Button variant="ghost" size="sm" onClick={() => toggleLike(lightbox.post)} className={`flex-1 gap-2 text-white hover:bg-white/10 ${lightbox.post.liked_by_me ? "text-primary" : ""}`}>
+                  <Heart className={`h-5 w-5 ${lightbox.post.liked_by_me ? "fill-current" : ""}`} />
+                  <span>{lightbox.post.likes_count}</span>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => { setLightbox(null); toggleComments(lightbox.post.id); setTimeout(() => document.getElementById(`post-${lightbox.post.id}`)?.scrollIntoView({ behavior: "smooth" }), 100); }} className="flex-1 gap-2 text-white hover:bg-white/10">
+                  <MessageCircle className="h-5 w-5" />
+                  <span>{lightbox.post.comments_count}</span>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => sharePost(lightbox.post)} className="flex-1 gap-2 text-white hover:bg-white/10">
+                  <Share2 className="h-5 w-5" />
+                  <span>{lightbox.post.shares_count || 0}</span>
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
