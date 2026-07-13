@@ -467,9 +467,23 @@ export function Feed() {
                 )
               )}
               {post.live_stream_url && (
-                <div className="mt-3 relative rounded-xl overflow-hidden bg-black">
-                  <span className="absolute top-2 right-2 z-10 rounded bg-red-600 text-white text-xs px-2 py-0.5 font-bold animate-pulse">🔴 مباشر</span>
-                  <HlsPlayer src={post.live_stream_url} className="w-full aspect-video" muted={true} />
+                <div className="mt-3 relative rounded-xl overflow-hidden bg-black aspect-video">
+                  <span className="absolute top-2 right-2 z-20 rounded bg-red-600 text-white text-xs px-2 py-0.5 font-bold animate-pulse">🔴 مباشر</span>
+                  {post.live_stream_url.startsWith("livekit:") ? (
+                    user ? (
+                      <LiveKitStage
+                        room={post.live_stream_url.replace(/^livekit:/, "")}
+                        identity={`viewer-${user.id}`}
+                        name={myProfile?.full_name || "مشاهد"}
+                        mode="viewer"
+                        video={false}
+                        audio={false}
+                        onEnded={() => { /* leave viewer */ }}
+                      />
+                    ) : null
+                  ) : (
+                    <HlsPlayer src={post.live_stream_url} className="w-full h-full" muted={true} />
+                  )}
                 </div>
               )}
               {post.image_url && (
