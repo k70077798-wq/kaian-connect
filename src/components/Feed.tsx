@@ -27,6 +27,7 @@ import { PostComposer, backgroundStyle } from "@/components/PostComposer";
 import { SponsoredAd } from "@/components/SponsoredAd";
 import { PostContent } from "@/components/PostContent";
 import { HlsPlayer } from "@/components/HlsPlayer";
+import { LiveKitStage } from "@/components/LiveKitStage";
 import { Globe, Users as UsersIcon, Lock, MapPin } from "lucide-react";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
@@ -87,10 +88,11 @@ export function Feed() {
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [commentsByPost, setCommentsByPost] = useState<Record<string, Comment[]>>({});
 
-  // live stream
+  // live stream (LiveKit-powered)
   const [liveOpen, setLiveOpen] = useState(false);
-  const liveVideoRef = useRef<HTMLVideoElement>(null);
-  const liveStreamRef = useRef<MediaStream | null>(null);
+  const [liveTitle, setLiveTitle] = useState("");
+  const [liveRoom, setLiveRoom] = useState<string | null>(null);
+  const [liveStarted, setLiveStarted] = useState(false);
 
   // story creation
   const [storyOpen, setStoryOpen] = useState(false);
@@ -307,29 +309,33 @@ export function Feed() {
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p));
   };
 
-  // Live stream
-  const startLive = async () => {
+  // Live stream (LiveKit)
+  const startLive = () => {
+    if (!user) return;
+    const room = `live-${user.id.slice(0, 8)}-${Date.now().toString(36)}`;
+    setLiveRoom(room);
+    setLiveTitle("");
+    setLiveStarted(false);
     setLiveOpen(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      liveStreamRef.current = stream;
-      if (liveVideoRef.current) liveVideoRef.current.srcObject = stream;
-    } catch {
-      toast.error("تعذر الوصول إلى الكاميرا");
-      setLiveOpen(false);
-    }
   };
   const stopLive = () => {
-    liveStreamRef.current?.getTracks().forEach(t => t.stop());
-    liveStreamRef.current = null;
     setLiveOpen(false);
+    setLiveRoom(null);
+    setLiveStarted(false);
+    setLiveTitle("");
   };
   const broadcastLive = async () => {
-    if (!user) return;
-    await supabase.from("posts").insert({ user_id: user.id, content: content.trim() || "🔴 بث مباشر", is_live: true, media_type: "live" });
+    if (!user || !liveRoom) return;
+    const { error } = await supabase.from("posts").insert({
+      user_id: user.id,
+      content: liveTitle.trim() || "🔴 بث مباشر",
+      is_live: true,
+      media_type: "live",
+      live_stream_url: `livekit:${liveRoom}`,
+    });
+    if (error) return toast.error("تعذر بدء البث");
     toast.success("بدأ البث المباشر!");
-    stopLive();
-    setContent("");
+    setLiveStarted(true);
   };
 
   // Stories
