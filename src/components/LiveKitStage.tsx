@@ -156,9 +156,10 @@ export function LiveKitStage({
         <span>{status}</span>
         {connected && mode !== "call" && <span className="opacity-80">• {Math.max(0, viewers - 1)} مشاهد</span>}
       </div>
-      {(canPublish || mode === "call") && (
+      {canPublish && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
-          {canPublish && (
+          {(
+            <>
             <>
               <Button size="icon" variant="secondary" className="h-12 w-12 rounded-full" onClick={toggleMute}>
                 {muted ? <MicOff /> : <Mic />}
