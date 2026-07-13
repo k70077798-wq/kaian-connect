@@ -563,14 +563,37 @@ export function Feed() {
 
       {/* Live dialog */}
       <Dialog open={liveOpen} onOpenChange={(o) => { if (!o) stopLive(); }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />البث المباشر</DialogTitle></DialogHeader>
-          <video ref={liveVideoRef} autoPlay muted playsInline className="w-full rounded-xl bg-black aspect-video" />
-          <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder="عنوان البث..." />
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={stopLive}>إلغاء</Button>
-            <Button onClick={broadcastLive} className="bg-red-600 hover:bg-red-700"><Radio className="h-4 w-4 ms-2" />ابدأ البث</Button>
-          </DialogFooter>
+        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+              {liveStarted ? "🔴 أنت مباشر الآن" : "إعداد البث المباشر"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full aspect-video bg-black">
+            {liveOpen && liveRoom && user && (
+              <LiveKitStage
+                room={liveRoom}
+                identity={user.id}
+                name={myProfile?.full_name || myProfile?.username || "مستخدم"}
+                mode="broadcaster"
+                video
+                audio
+                onEnded={stopLive}
+              />
+            )}
+          </div>
+          {!liveStarted && (
+            <div className="p-4 space-y-3">
+              <Textarea value={liveTitle} onChange={e => setLiveTitle(e.target.value)} placeholder="عنوان البث..." />
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={stopLive}>إلغاء</Button>
+                <Button onClick={broadcastLive} className="bg-red-600 hover:bg-red-700">
+                  <Radio className="h-4 w-4 ms-2" />ابدأ البث للمتابعين
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
