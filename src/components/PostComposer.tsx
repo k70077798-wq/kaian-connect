@@ -284,8 +284,8 @@ export function PostComposer({ myProfile, onStartLive }: Props) {
         <Button variant="ghost" size="sm" className="gap-1.5 sm:gap-2" onClick={() => { setOpen(true); setTimeout(() => imgRef.current?.click(), 50); }}>
           <ImageIcon className="h-4 w-4 text-green-600" /><span className="text-xs sm:text-sm">صورة/فيديو</span>
         </Button>
-        <Button variant="ghost" size="sm" className="gap-1.5 sm:gap-2" onClick={() => { setOpen(true); setTimeout(() => setShowLiveUrl(true), 50); }}>
-          <RadioTower className="h-4 w-4 text-red-500" /><span className="text-xs sm:text-sm">بث m3u8</span>
+        <Button variant="ghost" size="sm" className="gap-1.5 sm:gap-2" onClick={onStartLive}>
+          <Radio className="h-4 w-4 text-red-500" /><span className="text-xs sm:text-sm">بث مباشر</span>
         </Button>
         <Button variant="ghost" size="sm" className="gap-1.5 sm:gap-2" onClick={() => setOpen(true)}>
           <Smile className="h-4 w-4 text-yellow-500" /><span className="text-xs sm:text-sm">شعور</span>

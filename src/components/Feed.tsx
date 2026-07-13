@@ -27,6 +27,7 @@ import { PostComposer, backgroundStyle } from "@/components/PostComposer";
 import { SponsoredAd } from "@/components/SponsoredAd";
 import { PostContent } from "@/components/PostContent";
 import { HlsPlayer } from "@/components/HlsPlayer";
+import { LiveKitStage } from "@/components/LiveKitStage";
 import { Globe, Users as UsersIcon, Lock, MapPin } from "lucide-react";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
@@ -87,10 +88,11 @@ export function Feed() {
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [commentsByPost, setCommentsByPost] = useState<Record<string, Comment[]>>({});
 
-  // live stream
+  // live stream (LiveKit-powered)
   const [liveOpen, setLiveOpen] = useState(false);
-  const liveVideoRef = useRef<HTMLVideoElement>(null);
-  const liveStreamRef = useRef<MediaStream | null>(null);
+  const [liveTitle, setLiveTitle] = useState("");
+  const [liveRoom, setLiveRoom] = useState<string | null>(null);
+  const [liveStarted, setLiveStarted] = useState(false);
 
   // story creation
   const [storyOpen, setStoryOpen] = useState(false);
@@ -307,29 +309,33 @@ export function Feed() {
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p));
   };
 
-  // Live stream
-  const startLive = async () => {
+  // Live stream (LiveKit)
+  const startLive = () => {
+    if (!user) return;
+    const room = `live-${user.id.slice(0, 8)}-${Date.now().toString(36)}`;
+    setLiveRoom(room);
+    setLiveTitle("");
+    setLiveStarted(false);
     setLiveOpen(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      liveStreamRef.current = stream;
-      if (liveVideoRef.current) liveVideoRef.current.srcObject = stream;
-    } catch {
-      toast.error("تعذر الوصول إلى الكاميرا");
-      setLiveOpen(false);
-    }
   };
   const stopLive = () => {
-    liveStreamRef.current?.getTracks().forEach(t => t.stop());
-    liveStreamRef.current = null;
     setLiveOpen(false);
+    setLiveRoom(null);
+    setLiveStarted(false);
+    setLiveTitle("");
   };
   const broadcastLive = async () => {
-    if (!user) return;
-    await supabase.from("posts").insert({ user_id: user.id, content: content.trim() || "🔴 بث مباشر", is_live: true, media_type: "live" });
+    if (!user || !liveRoom) return;
+    const { error } = await supabase.from("posts").insert({
+      user_id: user.id,
+      content: liveTitle.trim() || "🔴 بث مباشر",
+      is_live: true,
+      media_type: "live",
+      live_stream_url: `livekit:${liveRoom}`,
+    });
+    if (error) return toast.error("تعذر بدء البث");
     toast.success("بدأ البث المباشر!");
-    stopLive();
-    setContent("");
+    setLiveStarted(true);
   };
 
   // Stories
@@ -461,9 +467,23 @@ export function Feed() {
                 )
               )}
               {post.live_stream_url && (
-                <div className="mt-3 relative rounded-xl overflow-hidden bg-black">
-                  <span className="absolute top-2 right-2 z-10 rounded bg-red-600 text-white text-xs px-2 py-0.5 font-bold animate-pulse">🔴 مباشر</span>
-                  <HlsPlayer src={post.live_stream_url} className="w-full aspect-video" muted={true} />
+                <div className="mt-3 relative rounded-xl overflow-hidden bg-black aspect-video">
+                  <span className="absolute top-2 right-2 z-20 rounded bg-red-600 text-white text-xs px-2 py-0.5 font-bold animate-pulse">🔴 مباشر</span>
+                  {post.live_stream_url.startsWith("livekit:") ? (
+                    user ? (
+                      <LiveKitStage
+                        room={post.live_stream_url.replace(/^livekit:/, "")}
+                        identity={`viewer-${user.id}`}
+                        name={myProfile?.full_name || "مشاهد"}
+                        mode="viewer"
+                        video={false}
+                        audio={false}
+                        onEnded={() => { /* leave viewer */ }}
+                      />
+                    ) : null
+                  ) : (
+                    <HlsPlayer src={post.live_stream_url} className="w-full h-full" muted={true} />
+                  )}
                 </div>
               )}
               {post.image_url && (
@@ -557,14 +577,37 @@ export function Feed() {
 
       {/* Live dialog */}
       <Dialog open={liveOpen} onOpenChange={(o) => { if (!o) stopLive(); }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />البث المباشر</DialogTitle></DialogHeader>
-          <video ref={liveVideoRef} autoPlay muted playsInline className="w-full rounded-xl bg-black aspect-video" />
-          <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder="عنوان البث..." />
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={stopLive}>إلغاء</Button>
-            <Button onClick={broadcastLive} className="bg-red-600 hover:bg-red-700"><Radio className="h-4 w-4 ms-2" />ابدأ البث</Button>
-          </DialogFooter>
+        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+              {liveStarted ? "🔴 أنت مباشر الآن" : "إعداد البث المباشر"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full aspect-video bg-black">
+            {liveOpen && liveRoom && user && (
+              <LiveKitStage
+                room={liveRoom}
+                identity={user.id}
+                name={myProfile?.full_name || myProfile?.username || "مستخدم"}
+                mode="broadcaster"
+                video
+                audio
+                onEnded={stopLive}
+              />
+            )}
+          </div>
+          {!liveStarted && (
+            <div className="p-4 space-y-3">
+              <Textarea value={liveTitle} onChange={e => setLiveTitle(e.target.value)} placeholder="عنوان البث..." />
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={stopLive}>إلغاء</Button>
+                <Button onClick={broadcastLive} className="bg-red-600 hover:bg-red-700">
+                  <Radio className="h-4 w-4 ms-2" />ابدأ البث للمتابعين
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
