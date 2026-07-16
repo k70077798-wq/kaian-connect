@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { Navbar } from "@/components/Navbar";
+import { IncomingCallListener } from "@/components/IncomingCallListener";
 
 export const Route = createFileRoute("/_app")({ component: AppLayout });
 
@@ -26,6 +27,7 @@ function AppLayout() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <Outlet />
+      <IncomingCallListener />
     </div>
   );
 }

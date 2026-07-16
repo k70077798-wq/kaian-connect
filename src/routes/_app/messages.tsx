@@ -97,22 +97,7 @@ function MessagesPage() {
     return () => { supabase.removeChannel(ch); };
   }, [activeId, user]);
 
-  // Listen for incoming call signals globally
-  useEffect(() => {
-    if (!user) return;
-    const ch = supabase
-      .channel(`incoming-call-${user.id}-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "call_signals", filter: `to_user=eq.${user.id}` },
-        (p) => {
-          const sig: any = p.new;
-          if (sig.kind === "offer" && !call) {
-            const peerName = profiles[sig.from_user]?.full_name || profiles[sig.from_user]?.username || "مكالمة";
-            setCall({ peer: sig.from_user, peerName, kind: sig.payload?.video ? "video" : "audio", initiator: false, initialOffer: sig.payload, conversationId: sig.conversation_id });
-          }
-        });
-    ch.subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [user, profiles, call]);
+  // Incoming call ringing dialog is handled globally by <IncomingCallListener /> in the app layout.
 
   const peerOf = (cid: string): Profile | null => {
     if (!user) return null;

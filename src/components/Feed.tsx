@@ -575,16 +575,10 @@ export function Feed() {
         <Card className="p-12 text-center"><p className="text-muted-foreground">لا توجد منشورات بعد. كن أول من ينشر!</p></Card>
       )}
 
-      {/* Live dialog */}
+      {/* Live dialog - fullscreen professional broadcast */}
       <Dialog open={liveOpen} onOpenChange={(o) => { if (!o) stopLive(); }}>
-        <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-              {liveStarted ? "🔴 أنت مباشر الآن" : "إعداد البث المباشر"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="relative w-full aspect-video bg-black">
+        <DialogContent className="max-w-none w-screen h-screen p-0 gap-0 rounded-none border-0 sm:rounded-none">
+          <div className="relative w-full h-full bg-black">
             {liveOpen && liveRoom && user && (
               <LiveKitStage
                 room={liveRoom}
@@ -596,18 +590,26 @@ export function Feed() {
                 onEnded={stopLive}
               />
             )}
-          </div>
-          {!liveStarted && (
-            <div className="p-4 space-y-3">
-              <Textarea value={liveTitle} onChange={e => setLiveTitle(e.target.value)} placeholder="عنوان البث..." />
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={stopLive}>إلغاء</Button>
-                <Button onClick={broadcastLive} className="bg-red-600 hover:bg-red-700">
-                  <Radio className="h-4 w-4 ms-2" />ابدأ البث للمتابعين
-                </Button>
+            {!liveStarted && (
+              <div className="absolute inset-x-0 bottom-24 z-30 mx-auto max-w-md px-4">
+                <div className="rounded-2xl bg-black/70 backdrop-blur p-4 space-y-3 border border-white/10">
+                  <p className="text-white font-bold text-lg">🔴 جاهز للبث المباشر</p>
+                  <Textarea
+                    value={liveTitle}
+                    onChange={e => setLiveTitle(e.target.value)}
+                    placeholder="عنوان البث..."
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="ghost" onClick={stopLive} className="text-white hover:bg-white/10">إلغاء</Button>
+                    <Button onClick={broadcastLive} className="bg-red-600 hover:bg-red-700">
+                      <Radio className="h-4 w-4 ms-2" />ابدأ البث للمتابعين
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
