@@ -27,6 +27,7 @@ function AppLayout() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <Outlet />
+      <IncomingCallListener />
     </div>
   );
 }
