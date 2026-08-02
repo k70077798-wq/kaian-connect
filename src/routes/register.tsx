@@ -32,7 +32,7 @@ function RegisterPage() {
     setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("تم إنشاء حسابك بنجاح!");
-    navigate({ to: "/home" });
+    navigate({ to: "/onboarding" });
   };
 
   return (
