@@ -35,23 +35,26 @@ function WelcomePage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const goNext = async (userId: string) => {
+    const target = safeNext(next);
+    if (target) return window.location.assign(target);
+    const { data } = await supabase.from("profiles").select("onboarding_completed").eq("id", userId).maybeSingle();
+    navigate({ to: data && data.onboarding_completed === false ? "/onboarding" : "/home" });
+  };
+
   useEffect(() => {
     if (loading || !session) return;
-    const target = safeNext(next);
-    if (target) window.location.assign(target);
-    else navigate({ to: "/home" });
+    goNext(session.user.id);
   }, [loading, session, next]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setSubmitting(false);
     if (error) return toast.error("بيانات الدخول غير صحيحة");
     toast.success("مرحباً بعودتك!");
-    const target = safeNext(next);
-    if (target) window.location.assign(target);
-    else navigate({ to: "/home" });
+    if (data.user) await goNext(data.user.id);
   };
 
   return (
