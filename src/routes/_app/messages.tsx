@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Phone, Video, Paperclip, Smile, Send, Forward, Reply, Trash2, Search, MessageSquarePlus, X, Check, CheckCheck } from "lucide-react";
+import { Phone, Video, Paperclip, Smile, Send, Forward, Reply, Trash2, Search, MessageSquarePlus, X, Check, CheckCheck, Loader2 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { CallModal } from "@/components/CallModal";
 
@@ -47,6 +47,7 @@ function MessagesPage() {
   const [foundUsers, setFoundUsers] = useState<Profile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [startingPeerId, setStartingPeerId] = useState<string | null>(null);
   const [call, setCall] = useState<{ peer: string; peerName: string; kind: "audio" | "video"; initiator: boolean; initialOffer?: any; conversationId: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -110,37 +111,40 @@ function MessagesPage() {
   const convPeers = useMemo(() => convs.map((c) => ({ c, peer: peerOf(c.id) })), [convs, members, profiles]);
 
   const startConvWith = async (peer: Profile) => {
-    if (!user) return;
-    // find existing direct conversation
-    const myConvIds = members.filter((m) => m.user_id === user.id).map((m) => m.conversation_id);
-    const existing = members.find((m) => m.user_id === peer.id && myConvIds.includes(m.conversation_id));
-    if (existing) {
-      setActiveId(existing.conversation_id);
-      setShowNew(false);
+    if (!user || startingPeerId) return;
+    setStartingPeerId(peer.id);
+    const { data: convId, error } = await supabase.rpc("get_or_create_direct_conversation", { _peer_id: peer.id });
+    setStartingPeerId(null);
+    if (error || !convId) {
+      toast.error(error?.message.includes("friendship") ? "يمكنك مراسلة الأصدقاء فقط" : "تعذّر فتح المحادثة، حاول مرة أخرى");
       return;
     }
-    // NOTE: generate the id client-side and skip .select().single(),
-    // because the conversations SELECT policy requires membership — which
-    // isn't true until the members insert below. Reading the just-inserted
-    // row otherwise fails with "تعذّر إنشاء المحادثة".
-    const convId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const { error: e1 } = await supabase.from("conversations").insert({ id: convId, created_by: user.id, is_group: false });
-    if (e1) { toast.error("تعذّر إنشاء المحادثة"); return; }
-    const { error: e2 } = await supabase.from("conversation_members").insert([
-      { conversation_id: convId, user_id: user.id },
-      { conversation_id: convId, user_id: peer.id },
-    ]);
-    if (e2) { toast.error("تعذّر إضافة الأعضاء"); return; }
+    const now = new Date().toISOString();
+    setProfiles((current) => ({ ...current, [peer.id]: peer }));
+    setMembers((current) => current.some((m) => m.conversation_id === convId)
+      ? current
+      : [...current, { conversation_id: convId, user_id: user.id, last_read_at: now }, { conversation_id: convId, user_id: peer.id, last_read_at: now }]);
+    setConvs((current) => current.some((c) => c.id === convId)
+      ? current
+      : [{ id: convId, is_group: false, title: null, avatar_url: null, last_message_at: now }, ...current]);
     setActiveId(convId);
     setShowNew(false);
+    navigate({ to: "/messages", search: { c: convId }, replace: true });
   };
 
   const doSearch = async (q: string) => {
     setSearchUsers(q);
     if (q.trim().length < 2) { setFoundUsers([]); return; }
+    if (!user) return;
+    const { data: friendships } = await supabase.from("friendships")
+      .select("requester_id,addressee_id").eq("status", "accepted")
+      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+    const friendIds = (friendships || []).map((f) => f.requester_id === user.id ? f.addressee_id : f.requester_id);
+    if (!friendIds.length) { setFoundUsers([]); return; }
+    const safeQuery = q.trim().replace(/[,%()]/g, "");
     const { data } = await supabase.from("profiles").select("id,full_name,username,avatar_url")
-      .or(`full_name.ilike.%${q}%,username.ilike.%${q}%`).neq("id", user?.id || "").limit(10);
-    setFoundUsers((data || []) as any);
+      .in("id", friendIds).or(`full_name.ilike.%${safeQuery}%,username.ilike.%${safeQuery}%`).limit(10);
+    setFoundUsers((data || []) as Profile[]);
   };
 
   const send = async (overrides: Partial<Msg> = {}) => {
@@ -349,15 +353,16 @@ function MessagesPage() {
             </div>
             <div className="max-h-72 overflow-y-auto space-y-1">
               {foundUsers.map((u) => (
-                <button key={u.id} onClick={() => startConvWith(u)} className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted text-start">
+                <button key={u.id} disabled={startingPeerId !== null} onClick={() => startConvWith(u)} className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted text-start disabled:opacity-60">
                   <Avatar className="h-10 w-10"><AvatarImage src={u.avatar_url || undefined} /><AvatarFallback>{(u.full_name || "?").charAt(0)}</AvatarFallback></Avatar>
                   <div className="flex-1">
                     <p className="font-semibold text-sm">{u.full_name || u.username}</p>
                     <p className="text-xs text-muted-foreground">@{u.username}</p>
                   </div>
-                  <Check className="h-4 w-4 text-primary" />
+                  {startingPeerId === u.id ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Check className="h-4 w-4 text-primary" />}
                 </button>
               ))}
+              {searchUsers.trim().length >= 2 && foundUsers.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">لا يوجد صديق مطابق للبحث</p>}
             </div>
           </div>
         </DialogContent>

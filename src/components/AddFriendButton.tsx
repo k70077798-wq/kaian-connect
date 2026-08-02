@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { UserPlus, UserCheck, Clock, Check, X, Loader2 } from "lucide-react";
+import { UserPlus, Clock, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Status = "none" | "friends" | "outgoing" | "incoming" | "self" | "loading";
@@ -61,6 +61,7 @@ export function AddFriendButton({ userId, size = "sm", variant = "default", clas
     const { error } = await supabase.from("friendships").update({ status: "accepted" }).eq("id", friendshipId);
     setBusy(false);
     if (error) return toast.error("تعذر القبول");
+    setStatus("friends");
     toast.success("تم قبول الصداقة");
   };
   const remove = async () => {
@@ -73,14 +74,7 @@ export function AddFriendButton({ userId, size = "sm", variant = "default", clas
 
   const stop = (e: React.MouseEvent) => { e.stopPropagation(); e.preventDefault(); };
 
-  if (status === "friends") {
-    return (
-      <Button onClick={(e) => { stop(e); remove(); }} disabled={busy} size={size} variant="outline" className={className}>
-        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserCheck className="h-3.5 w-3.5" />}
-        {!compact && <span className="ms-1.5">صديق</span>}
-      </Button>
-    );
-  }
+  if (status === "friends") return null;
   if (status === "outgoing") {
     return (
       <Button onClick={(e) => { stop(e); remove(); }} disabled={busy} size={size} variant="outline" className={className}>
