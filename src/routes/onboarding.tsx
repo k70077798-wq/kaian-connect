@@ -121,16 +121,18 @@ function PhotosStep({ userId, onNext, onSkip }: { userId: string; onNext: () => 
   }, [userId]);
 
   const upload = async (file: File, kind: "avatar" | "cover") => {
+    if (!file.type.startsWith("image/")) { toast.error("يرجى اختيار صورة صالحة"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("حجم الصورة يجب ألا يتجاوز 10MB"); return; }
     setBusyKind(kind);
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const path = `${userId}/${kind}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-    if (error) { setBusyKind(null); toast.error("تعذر رفع الصورة"); return; }
+    const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) { setBusyKind(null); toast.error(`تعذر رفع الصورة: ${error.message}`); return; }
     const url = supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
     const col = kind === "avatar" ? { avatar_url: url } : { cover_url: url };
     const { error: uErr } = await supabase.from("profiles").update(col).eq("id", userId);
     setBusyKind(null);
-    if (uErr) return toast.error("تعذر حفظ الصورة");
+    if (uErr) return toast.error(`تعذر حفظ الصورة: ${uErr.message}`);
     if (kind === "avatar") setAvatar(url); else setCover(url);
     toast.success("تم حفظ الصورة");
   };

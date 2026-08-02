@@ -62,11 +62,12 @@ function ProfilePage() {
 
   const uploadFile = async (file: File, kind: "avatar" | "cover") => {
     if (!user) return null;
+    if (!file.type.startsWith("image/")) { toast.error("يرجى اختيار صورة صالحة"); return null; }
     if (file.size > 10 * 1024 * 1024) { toast.error("الحد الأقصى 10MB"); return null; }
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const path = `${user.id}/${kind}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-    if (error) { toast.error("فشل الرفع"); return null; }
+    const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) { toast.error(`فشل رفع الصورة: ${error.message}`); return null; }
     return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
   };
 
@@ -75,7 +76,9 @@ function ProfilePage() {
     setUploadingAvatar(true);
     const url = await uploadFile(f, "avatar");
     if (url) {
-      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user!.id);
+      if (!user) { setUploadingAvatar(false); return; }
+      const { error } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      if (error) { toast.error(`تعذر حفظ الصورة: ${error.message}`); setUploadingAvatar(false); return; }
       setProfile((p: any) => ({ ...p, avatar_url: url }));
       toast.success("تم تحديث الصورة الشخصية");
     }
@@ -87,7 +90,9 @@ function ProfilePage() {
     setUploadingCover(true);
     const url = await uploadFile(f, "cover");
     if (url) {
-      await supabase.from("profiles").update({ cover_url: url }).eq("id", user!.id);
+      if (!user) { setUploadingCover(false); return; }
+      const { error } = await supabase.from("profiles").update({ cover_url: url }).eq("id", user.id);
+      if (error) { toast.error(`تعذر حفظ الغلاف: ${error.message}`); setUploadingCover(false); return; }
       setProfile((p: any) => ({ ...p, cover_url: url }));
       toast.success("تم تحديث صورة الغلاف");
     }

@@ -12,6 +12,7 @@ import { MessageCircle, MapPin, Loader2 } from "lucide-react";
 import { HlsPlayer } from "@/components/HlsPlayer";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/profile/$userId")({ component: UserProfilePage });
 
@@ -46,31 +47,8 @@ function UserProfilePage() {
 
   const openMessage = async () => {
     if (!user) return;
-    // find existing direct conversation between user and this profile
-    const { data: myMemberships } = await supabase
-      .from("conversation_members").select("conversation_id").eq("user_id", user.id);
-    const myIds = (myMemberships || []).map((m: any) => m.conversation_id);
-    if (myIds.length) {
-      const { data: shared } = await supabase
-        .from("conversation_members").select("conversation_id")
-        .eq("user_id", userId).in("conversation_id", myIds);
-      const sharedIds = (shared || []).map((s: any) => s.conversation_id);
-      if (sharedIds.length) {
-        const { data: direct } = await supabase
-          .from("conversations").select("id").in("id", sharedIds).eq("is_group", false).limit(1);
-        if (direct && direct[0]) { navigate({ to: "/messages", search: { c: direct[0].id } }); return; }
-      }
-    }
-    // Client-side id: SELECT policy on conversations requires membership,
-    // so `.select().single()` after insert would fail. Insert then add members.
-    const convId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const { error: e1 } = await supabase.from("conversations").insert({ id: convId, created_by: user.id, is_group: false });
-    if (e1) return;
-    const { error: e2 } = await supabase.from("conversation_members").insert([
-      { conversation_id: convId, user_id: user.id },
-      { conversation_id: convId, user_id: userId },
-    ]);
-    if (e2) return;
+    const { data: convId, error } = await supabase.rpc("get_or_create_direct_conversation", { _peer_id: userId });
+    if (error || !convId) { toast.error("تعذّر فتح المحادثة، حاول مرة أخرى"); return; }
     navigate({ to: "/messages", search: { c: convId } });
   };
 
