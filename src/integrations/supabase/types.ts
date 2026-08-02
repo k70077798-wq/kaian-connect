@@ -611,38 +611,62 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          birthdate: string | null
           cover_url: string | null
           created_at: string
           full_name: string | null
+          hometown: string | null
           id: string
+          interests: string[]
           is_banned: boolean
+          onboarding_completed: boolean
+          relationship: string | null
+          social_links: Json
+          tips_seen: boolean
           username: string | null
           verified: boolean
           verified_style: string
+          work: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          birthdate?: string | null
           cover_url?: string | null
           created_at?: string
           full_name?: string | null
+          hometown?: string | null
           id: string
+          interests?: string[]
           is_banned?: boolean
+          onboarding_completed?: boolean
+          relationship?: string | null
+          social_links?: Json
+          tips_seen?: boolean
           username?: string | null
           verified?: boolean
           verified_style?: string
+          work?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          birthdate?: string | null
           cover_url?: string | null
           created_at?: string
           full_name?: string | null
+          hometown?: string | null
           id?: string
+          interests?: string[]
           is_banned?: boolean
+          onboarding_completed?: boolean
+          relationship?: string | null
+          social_links?: Json
+          tips_seen?: boolean
           username?: string | null
           verified?: boolean
           verified_style?: string
+          work?: string | null
         }
         Relationships: []
       }
