@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { UserPlus, UserCheck, Clock, Check, X, Loader2 } from "lucide-react";
+import { UserPlus, Clock, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Status = "none" | "friends" | "outgoing" | "incoming" | "self" | "loading";
