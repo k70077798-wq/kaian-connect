@@ -864,6 +864,10 @@ export type Database = {
         Args: { _amount: number; _note: string; _user_id: string }
         Returns: undefined
       }
+      get_or_create_direct_conversation: {
+        Args: { _peer_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
