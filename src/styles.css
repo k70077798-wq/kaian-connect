@@ -152,6 +152,31 @@
 .shadow-elegant { box-shadow: var(--shadow-elegant); }
 .shadow-card { box-shadow: var(--shadow-card); }
 
+/* KAIAN auth surfaces */
+.text-brand-gradient {
+  background-image: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.auth-canvas { background-image: var(--gradient-soft); }
+.auth-swoosh {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(0.5px);
+  pointer-events: none;
+}
+.auth-card {
+  background: color-mix(in oklab, var(--card) 82%, transparent);
+  backdrop-filter: blur(18px);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  box-shadow: var(--shadow-elegant);
+}
+.field-shell {
+  background: color-mix(in oklab, var(--muted) 75%, var(--card));
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+}
+
 /* Verified badge */
 .verified-gold { color: #f5c518; filter: drop-shadow(0 0 2px rgba(245,197,24,.45)); }
 .verified-brand { color: var(--primary); }
