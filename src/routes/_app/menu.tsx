@@ -6,9 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  X, Settings, ChevronDown, ChevronLeft, LayoutDashboard, Users, Bookmark, History,
-  Clapperboard, UsersRound, Newspaper, Wallet, Megaphone, Radio,
-  Flag, Calendar, Gamepad2, HelpCircle, LogOut, Shield, Moon, Sun, Bell, BadgeCheck, User as UserIcon,
+  X, Settings, ChevronDown, ChevronLeft, LayoutDashboard, Users, Wallet, Megaphone, Radio,
+  Clapperboard, UsersRound, Newspaper, History, Flag, HelpCircle, LogOut, Shield, Moon, Sun, Bell,
+  BadgeCheck, User as UserIcon,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
