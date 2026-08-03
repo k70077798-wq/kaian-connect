@@ -4,23 +4,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { Sparkles, Users, MessageCircle, Zap } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { AuthBrand, AuthShell, LOGO_URL } from "@/components/AuthShell";
+import { Field, SocialRow } from "@/components/AuthBits";
 
 export const Route = createFileRoute("/")({
   validateSearch: (s: Record<string, unknown>) => ({
     next: typeof s.next === "string" ? s.next : undefined,
   }),
   component: WelcomePage,
+  head: () => ({
+    meta: [
+      { title: "تسجيل الدخول | KAIAN — منصة التواصل الإجتماعي" },
+      { name: "description", content: "سجّل الدخول إلى KAIAN لمشاركة منشوراتك، البث المباشر، والدردشة مع أصدقائك." },
+      { property: "og:title", content: "تسجيل الدخول | KAIAN" },
+      { property: "og:description", content: "منصة KAIAN للتواصل الاجتماعي — منشورات، ريلز، بث مباشر ورسائل." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
 });
 
-const LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh8iH2aqvCzmEns7KC2YENagCnERIJOCzCHQk5ZkHIoGpf3pBNUwRj2LlMXr8r7NI2JFNWClKqPqtUoIu3kfxW-iYfogd0JPiZP9C5zm0gGkhUFRT-2fAmjmB3izc1mj2JzPQ0Jw0pK4aMGrMV-_J5vSbl3wh1IqshyaIDUDZ_TFNZVDajmZ6gCr9zSj10/s320/%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A7%D9%A0%D9%A3_%D9%A2%D9%A1%D9%A4%D9%A2%D9%A0%D9%A3.png";
-const HERO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgbyUS-EUAeNo2fwIeaFaibkJS6YkDs5z4QQKeqVXUknyT6cMk3kYiyyIZqsgGEjwi4a1BdH4BOV-6WhthAKwH1Fq1OPWCCD6XKAx2BVr73Kxm2DZ17HaC_S0feiv2_lCXDXqb-vppwn7zFOmjVlUKlF2MigTciIDDFEsIVaTRnm2NYOdr0K9C7Bek3yWI/s320/%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A7%D9%A0%D9%A3_%D9%A2%D9%A1%D9%A4%D9%A1%D9%A0%D9%A6.png";
-
-// Only allow same-origin relative paths as `next`, per Lovable OAuth consent guidance.
+// Only allow same-origin relative paths as `next`.
 function safeNext(next: string | undefined): string | null {
   if (!next) return null;
   if (!next.startsWith("/") || next.startsWith("//")) return null;
@@ -33,6 +40,8 @@ function WelcomePage() {
   const { next } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const goNext = async (userId: string) => {
@@ -50,142 +59,113 @@ function WelcomePage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setSubmitting(false);
     if (error) return toast.error("بيانات الدخول غير صحيحة");
     toast.success("مرحباً بعودتك!");
     if (data.user) await goNext(data.user.id);
   };
 
+  const forgot = async () => {
+    if (!email.trim()) return toast.error("أدخل بريدك الإلكتروني أولاً");
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("تم إرسال رابط استعادة كلمة المرور إلى بريدك");
+  };
+
+  const social = async (provider: "google" | "facebook" | "apple") => {
+    if (provider !== "google") return toast.info("هذه الطريقة ستتوفر قريباً");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) toast.error("تسجيل الدخول عبر Google غير مهيأ حالياً");
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-soft-gradient" dir="rtl">
-      <div className="flex-1 grid lg:grid-cols-2">
-        {/* Left visual panel */}
-        <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden bg-brand-gradient text-primary-foreground">
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 relative z-10">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white p-1 shadow-elegant">
-              <img src={LOGO_URL} alt="KAIAN logo" className="h-full w-full object-contain" />
-            </div>
-            <div>
-              <span className="block text-3xl font-black tracking-tight leading-none">KAIAN</span>
-              <span className="text-xs opacity-80">منصة التواصل الاجتماعي</span>
-            </div>
-          </motion.div>
+    <AuthShell>
+      <AuthBrand />
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.15, duration: 0.6 }}
-            className="relative z-10 my-8 flex justify-center"
-          >
-            <div className="relative">
-              <div className="absolute -inset-8 rounded-full bg-white/10 blur-2xl" />
-              <img
-                src={HERO_URL}
-                alt="KAIAN"
-                className="relative h-64 w-64 xl:h-80 xl:w-80 object-contain drop-shadow-2xl"
-                loading="eager"
-              />
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="relative z-10">
-            <h1 className="text-4xl xl:text-5xl font-black leading-tight">
-              تواصل مع الأصدقاء
-              <br />
-              <span className="opacity-90">وانطلق نحو لحظات أجمل.</span>
-            </h1>
-            <p className="mt-4 max-w-md text-base xl:text-lg opacity-90">
-              شارك أخبارك، ابنِ مجتمعك، واكتشف عالماً جديداً من العلاقات على KAIAN.
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-3 max-w-md">
-              {[
-                { i: Users, t: "أصدقاء ومجتمعات" },
-                { i: MessageCircle, t: "رسائل ومكالمات" },
-                { i: Sparkles, t: "ريلز وقصص" },
-                { i: Zap, t: "بث مباشر" },
-              ].map((f, idx) => (
-                <div key={idx} className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur px-3 py-2 text-sm">
-                  <f.i className="h-4 w-4 shrink-0" />
-                  <span className="font-semibold">{f.t}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
-        </div>
-
-        {/* Right form panel */}
-        <div className="flex items-center justify-center p-6 sm:p-12">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-            <div className="lg:hidden mb-8 flex flex-col items-center gap-3 text-center">
-              <div className="grid h-20 w-20 place-items-center rounded-3xl bg-brand-gradient p-2 shadow-elegant">
-                <img src={LOGO_URL} alt="KAIAN" className="h-full w-full object-contain rounded-2xl bg-white/10" />
-              </div>
-              <div>
-                <span className="text-3xl font-black block">KAIAN</span>
-                <span className="text-xs text-muted-foreground">منصة التواصل الاجتماعي</span>
-              </div>
-            </div>
-
-            <h2 className="text-3xl font-black">
-              مرحباً بعودتك! <span className="inline-block">👋</span>
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              ليس لديك حساب؟{" "}
-              <Link to="/register" className="font-semibold text-primary hover:underline">
-                سجّل الآن
-              </Link>
-            </p>
-
-            <form onSubmit={handleLogin} className="mt-8 space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="email">البريد الإلكتروني</Label>
-                <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl" placeholder="example@kaian.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">كلمة المرور</Label>
-                <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl" placeholder="••••••••" />
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <Checkbox defaultChecked /> <span>تذكرني</span>
-                </label>
-                <a className="text-primary font-semibold hover:underline cursor-pointer">نسيت كلمة المرور؟</a>
-              </div>
-              <Button type="submit" disabled={submitting} className="w-full h-12 rounded-xl bg-brand-gradient hover:opacity-95 text-base font-bold shadow-elegant">
-                {submitting ? "جاري الدخول..." : "تسجيل الدخول"}
-              </Button>
-            </form>
-
-            <p className="mt-8 text-center text-xs text-muted-foreground">
-              بدخولك توافق على <a className="underline">شروط الاستخدام</a> و{" "}
-              <a className="underline">سياسة الخصوصية</a>.
-            </p>
-          </motion.div>
-        </div>
+      <div className="mt-6 text-center">
+        <h1 className="text-3xl font-black sm:text-4xl">
+          <span className="text-primary">مرحباً</span> <span className="text-destructive">بعودتك!</span>
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">سعداء لرؤيتك مرة أخرى 💙</p>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t bg-card/60 backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right">
-          <div className="flex items-center gap-2 text-sm">
-            <img src={LOGO_URL} alt="" className="h-8 w-8 rounded-lg object-contain bg-white shadow-card" />
-            <div>
-              <p className="font-bold">جميع الحقوق محفوظة © 2026</p>
-              <p className="text-xs text-muted-foreground">
-                صنع بكل <span className="text-red-500">♥️</span> من{" "}
-                <span className="font-semibold text-primary">عبدالحميد داوؤد</span>
-              </p>
-            </div>
+      <form onSubmit={handleLogin} className="mt-6 space-y-4">
+        <Field label="البريد الإلكتروني" icon={<Mail className="h-5 w-5" />}>
+          <Input
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="أدخل بريدك الإلكتروني"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
+          />
+        </Field>
+
+        <Field label="كلمة المرور" icon={<Lock className="h-5 w-5" />}>
+          <div className="flex items-center gap-2">
+            <Input
+              type={show ? "text" : "password"}
+              required
+              autoComplete="current-password"
+              placeholder="أدخل كلمة المرور"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
+            />
+            <button type="button" onClick={() => setShow((s) => !s)} aria-label="إظهار كلمة المرور" className="text-muted-foreground">
+              {show ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </button>
           </div>
-          <p className="text-xs text-muted-foreground max-w-md leading-relaxed">
-            المنصة قيد التطوير والتحسين — شكراً لثقتكم بنا.
-          </p>
+        </Field>
+
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <label className="flex cursor-pointer items-center gap-2">
+            <Checkbox checked={remember} onCheckedChange={(v) => setRemember(Boolean(v))} />
+            <span className="font-semibold">تذكّرني</span>
+          </label>
+          <button type="button" onClick={forgot} className="font-semibold text-destructive underline decoration-destructive/50 underline-offset-4">
+            نسيت كلمة المرور؟
+          </button>
         </div>
-      </footer>
-    </div>
+
+        <Button
+          type="submit"
+          disabled={submitting}
+          className="relative h-14 w-full rounded-2xl bg-brand-gradient text-lg font-black text-primary-foreground shadow-elegant hover:opacity-95"
+        >
+          <span className="absolute start-2 grid h-10 w-10 place-items-center rounded-full bg-card text-primary">
+            <ArrowLeft className="h-5 w-5" />
+          </span>
+          {submitting ? "جاري الدخول..." : "تسجيل الدخول"}
+        </Button>
+      </form>
+
+      <SocialRow onPick={social} />
+
+      <div className="mt-6 text-center text-sm">
+        <p className="text-muted-foreground">ليس لديك حساب؟</p>
+        <Link to="/register" className="mt-1 inline-block font-black text-primary underline decoration-destructive/60 underline-offset-8">
+          إنشاء حساب جديد
+        </Link>
+      </div>
+
+      <div className="mt-8 border-t pt-4 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <img src={LOGO_URL} alt="" className="h-7 w-auto object-contain" />
+          <p className="text-xs font-bold">جميع الحقوق محفوظة © 2026</p>
+        </div>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          صنع بكل <span className="text-destructive">♥️</span> من{" "}
+          <span className="font-semibold text-primary">عبدالحميد داوؤد</span> — المنصة قيد التطوير والتحسين، شكراً لثقتكم بنا.
+        </p>
+      </div>
+    </AuthShell>
   );
 }
