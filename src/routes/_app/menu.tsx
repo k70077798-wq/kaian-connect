@@ -3,39 +3,41 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import {
-  Search, Settings, ChevronDown, LayoutDashboard, Users, Bookmark, History,
-  Clapperboard, UsersRound, Newspaper, Store, Wallet, Megaphone, Briefcase,
-  Flag, Calendar, Gamepad2, HelpCircle, LogOut, Shield, Moon, Sun, Bell,
+  X, Settings, ChevronDown, ChevronLeft, LayoutDashboard, Users, Wallet, Megaphone, Radio,
+  Clapperboard, UsersRound, Newspaper, History, Flag, HelpCircle, LogOut, Shield, Moon, Sun, Bell,
+  BadgeCheck, User as UserIcon,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
 export const Route = createFileRoute("/_app/menu")({ component: MenuPage });
 
-type Tile = {
-  to: string;
-  label: string;
-  icon: any;
-  color: string;
-  bg: string;
-  badge?: string;
-  adminOnly?: boolean;
-};
+type Tile = { to: string; label: string; icon: any; color: string; adminOnly?: boolean };
+
+/** Top circular shortcuts (like the reference "اختصاراتك" row). */
+const QUICK: Tile[] = [
+  { to: "/friends", label: "أصدقاء مقربون", icon: Users, color: "bg-destructive" },
+  { to: "/reels", label: "ريلز", icon: Radio, color: "bg-emerald-500" },
+  { to: "/watch", label: "الفيديو", icon: Clapperboard, color: "bg-orange-500" },
+  { to: "/groups", label: "المجموعات", icon: UsersRound, color: "bg-primary" },
+  { to: "/wallet", label: "المحفظة", icon: Wallet, color: "bg-violet-500" },
+];
 
 const TILES: Tile[] = [
-  { to: "/dashboard", label: "لوحة المعلومات", icon: LayoutDashboard, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { to: "/friends", label: "الأصدقاء", icon: Users, color: "text-sky-500", bg: "bg-sky-500/10" },
-  { to: "/reels", label: "ريلز", icon: Clapperboard, color: "text-violet-500", bg: "bg-violet-500/10" },
-  { to: "/watch", label: "الفيديوهات", icon: Clapperboard, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-  { to: "/groups", label: "المجموعات", icon: UsersRound, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { to: "/pages", label: "الصفحات", icon: Flag, color: "text-pink-500", bg: "bg-pink-500/10" },
-  { to: "/wallet", label: "المحفظة", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  { to: "/ads-manager", label: "إعلاناتي", icon: Megaphone, color: "text-rose-500", bg: "bg-rose-500/10" },
-  { to: "/messages", label: "الرسائل", icon: Newspaper, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { to: "/notifications", label: "الإشعارات", icon: Bell as any, color: "text-amber-600", bg: "bg-amber-500/10" },
+  { to: "/groups", label: "المجموعات", icon: UsersRound, color: "text-primary" },
+  { to: "/friends", label: "الأصدقاء", icon: Users, color: "text-primary" },
+  { to: "/pages", label: "الصفحات", icon: Flag, color: "text-orange-500" },
+  { to: "/watch", label: "الفيديو", icon: Clapperboard, color: "text-primary" },
+  { to: "/reels", label: "ريلز", icon: Radio, color: "text-destructive" },
+  { to: "/search", label: "البحث", icon: History, color: "text-primary" },
+  { to: "/ads-manager", label: "مركز الإعلانات", icon: Megaphone, color: "text-primary" },
+  { to: "/dashboard", label: "لوحة المعلومات", icon: LayoutDashboard, color: "text-primary" },
+  { to: "/notifications", label: "الإشعارات", icon: Bell, color: "text-amber-600" },
+  { to: "/messages", label: "الرسائل", icon: Newspaper, color: "text-primary" },
+  { to: "/wallet", label: "المحفظة", icon: Wallet, color: "text-emerald-600" },
+  { to: "/settings", label: "الإعدادات", icon: Settings, color: "text-primary" },
 ];
 
 function MenuPage() {
@@ -43,178 +45,180 @@ function MenuPage() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const [profile, setProfile] = useState<any>(null);
-  const [friendsOnline, setFriendsOnline] = useState(0);
-  const [friendsCount, setFriendsCount] = useState(0);
-  const [shortcuts, setShortcuts] = useState<any[]>([]);
-  const [balance, setBalance] = useState<number>(0);
+  const [balance, setBalance] = useState(0);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: p }, { count: fc }, { data: pf }, { data: w }] = await Promise.all([
+      const [{ data: p }, { data: w }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-        supabase.from("friendships").select("*", { count: "exact", head: true })
-          .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`).eq("status", "accepted"),
-        supabase.from("page_followers").select("page_id, pages(id, name, avatar_url)").eq("user_id", user.id).limit(8),
         supabase.from("wallets").select("balance").eq("user_id", user.id).maybeSingle(),
       ]);
       setProfile(p);
-      setFriendsCount(fc || 0);
-      setFriendsOnline(Math.floor((fc || 0) * 0.3));
-      setShortcuts((pf || []).map((r: any) => r.pages).filter(Boolean));
       setBalance(Number(w?.balance ?? 0));
     })();
   }, [user?.id]);
 
-  const visibleTiles = TILES.filter(t => !t.adminOnly || isAdmin);
-  const shown = showAll ? visibleTiles : visibleTiles.slice(0, 8);
-
+  const visible = TILES.filter((t) => !t.adminOnly || isAdmin);
+  const shown = showAll ? visible : visible.slice(0, 12);
   const initials = (profile?.full_name || user?.email || "K").slice(0, 2).toUpperCase();
 
+  const rows: { label: string; icon: any; onClick: () => void }[] = [
+    { label: "الإعدادات والخصوصية", icon: Settings, onClick: () => navigate({ to: "/settings" }) },
+    { label: "المساعدة والدعم", icon: HelpCircle, onClick: () => navigate({ to: "/settings" }) },
+  ];
+
   return (
-    <div className="mx-auto max-w-2xl px-3 py-4 space-y-4 pb-20">
+    <div className="mx-auto max-w-2xl px-3 py-4 pb-24 space-y-4" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button onClick={() => {}} className="grid h-10 w-10 place-items-center rounded-full bg-muted hover:bg-muted/80">
-            <Search className="h-5 w-5" />
-          </button>
-          <button onClick={() => navigate({ to: "/settings" })} className="grid h-10 w-10 place-items-center rounded-full bg-muted hover:bg-muted/80">
-            <Settings className="h-5 w-5" />
-          </button>
-        </div>
-        <h1 className="text-2xl font-black">القائمة</h1>
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+        <button
+          onClick={() => navigate({ to: "/home" })}
+          aria-label="إغلاق"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-muted hover:bg-muted/70"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <h1 className="truncate text-end text-2xl font-black sm:text-3xl">القائمة</h1>
       </div>
 
       {/* Profile card */}
-      <Card className="p-3">
-        <button onClick={() => navigate({ to: "/profile" })} className="w-full flex items-center gap-3">
-          <div className="relative">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={profile?.avatar_url ?? undefined} />
-              <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials}</AvatarFallback>
-            </Avatar>
-            <span className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-[10px] font-bold text-white border-2 border-card">+</span>
+      <Card className="p-3 shadow-card">
+        <button onClick={() => navigate({ to: "/profile" })} className="flex w-full items-center gap-3">
+          <Avatar className="h-16 w-16 shrink-0 ring-2 ring-primary/25">
+            <AvatarImage src={profile?.avatar_url ?? undefined} />
+            <AvatarFallback className="bg-brand-gradient font-bold text-primary-foreground">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1 text-end">
+            <p className="flex items-center justify-end gap-1.5 truncate text-lg font-black">
+              {profile?.full_name || "مستخدم"}
+              <BadgeCheck className="h-5 w-5 shrink-0 text-primary" />
+            </p>
+            <p className="mt-0.5 flex items-center justify-end gap-1.5 text-sm text-muted-foreground">
+              عرض ملفك الشخصي
+              <UserIcon className="h-4 w-4" />
+            </p>
           </div>
-          <p className="flex-1 text-end font-bold text-base">{profile?.full_name || "مستخدم"}</p>
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-muted">
-            <ChevronDown className="h-5 w-5" />
-          </span>
         </button>
       </Card>
 
-      {/* Shortcuts */}
-      {shortcuts.length > 0 && (
-        <div>
-          <p className="text-end text-sm font-bold text-muted-foreground mb-2">اختصاراتك</p>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" dir="rtl">
-            {shortcuts.map((s: any) => (
-              <Link key={s.id} to="/pages/$pageId" params={{ pageId: s.id }} className="shrink-0 w-20 text-center">
-                <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-muted shadow-card">
-                  {s.avatar_url ? <img src={s.avatar_url} className="h-full w-full object-cover" alt={s.name} /> : <div className="h-full w-full bg-brand-gradient" />}
-                  <span className="absolute -bottom-1 -left-1 grid h-6 w-6 place-items-center rounded-md bg-orange-500 text-white">
-                    <Flag className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-                <p className="text-[11px] font-semibold mt-1 truncate">{s.name}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Wallet quick card */}
+      {/* Wallet */}
       <Link to="/wallet">
-        <Card className="p-4 bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent border-emerald-500/30 flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-xl bg-emerald-500/20">
-            <Wallet className="h-6 w-6 text-emerald-600" />
+        <Card className="flex items-center gap-3 border-primary/20 bg-brand-gradient/5 p-4 shadow-card">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-gradient text-primary-foreground">
+            <Wallet className="h-6 w-6" />
           </div>
-          <div className="flex-1 text-end">
+          <div className="min-w-0 flex-1 text-end">
             <p className="text-xs text-muted-foreground">رصيد المحفظة</p>
             <p className="text-xl font-black">{balance.toFixed(2)} $</p>
           </div>
-          <Button size="sm" className="bg-brand-gradient text-primary-foreground border-0">إدارة</Button>
+          <Button size="sm" className="shrink-0 bg-brand-gradient text-primary-foreground">إدارة</Button>
         </Card>
       </Link>
 
-      {/* Tiles grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {shown.map(t => {
-          const Icon = t.icon;
-          const sub = t.to === "/friends" ? `(${friendsOnline} متصلاً)` : "";
-          return (
-            <Link key={t.to} to={t.to as any}>
-              <Card className="p-4 h-full hover:bg-muted/50 transition">
-                <div className={`h-10 w-10 rounded-xl grid place-items-center ${t.bg} mb-3 me-auto`}>
-                  <Icon className={`h-5 w-5 ${t.color}`} />
-                </div>
-                <p className="font-bold text-[15px] text-end leading-tight">
-                  {t.label} {sub && <span className="text-xs font-normal text-muted-foreground">{sub}</span>}
-                </p>
-              </Card>
-            </Link>
-          );
-        })}
+      {/* Quick circular shortcuts */}
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <Link to="/settings" className="text-sm font-bold text-primary">تعديل</Link>
+          <p className="text-sm font-black">اختصاراتك</p>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {QUICK.map((q) => {
+            const Icon = q.icon;
+            return (
+              <Link key={q.label} to={q.to as any} className="w-24 shrink-0">
+                <Card className="grid place-items-center gap-2 p-3 shadow-card transition hover:-translate-y-0.5">
+                  <span className={`grid h-12 w-12 place-items-center rounded-full ${q.color} text-white`}>
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <p className="w-full truncate text-center text-[11px] font-bold">{q.label}</p>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
-      {visibleTiles.length > 8 && (
-        <Button variant="secondary" className="w-full" onClick={() => setShowAll(s => !s)}>
-          {showAll ? "عرض أقل" : "عرض المزيد"}
-        </Button>
-      )}
+      {/* All shortcuts */}
+      <div>
+        <p className="mb-2 text-end text-sm font-black">كل الاختصارات</p>
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {shown.map((t) => {
+            const Icon = t.icon;
+            return (
+              <Link key={t.label + t.to} to={t.to as any}>
+                <Card className="grid h-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 p-3.5 shadow-card transition hover:bg-muted/50">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent">
+                    <Icon className={`h-5 w-5 ${t.color}`} />
+                  </span>
+                  <p className="truncate text-end text-[15px] font-bold">{t.label}</p>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
 
-      {/* Accordions */}
-      <Accordion type="multiple" className="bg-card rounded-xl border">
-        <AccordionItem value="help" className="border-b-0">
-          <AccordionTrigger className="px-4 hover:no-underline">
-            <div className="flex items-center gap-3 flex-1">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-muted"><HelpCircle className="h-4 w-4" /></span>
-              <span className="flex-1 text-end font-bold">المساعدة والدعم</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 space-y-2 text-end">
-            <Link to="/notifications" className="block py-2 hover:text-primary">مركز المساعدة</Link>
-            <Link to="/settings" className="block py-2 hover:text-primary">الإبلاغ عن مشكلة</Link>
-            <Link to="/settings" className="block py-2 hover:text-primary">شروط الخدمة وسياسات الخصوصية</Link>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="settings" className="border-b-0">
-          <AccordionTrigger className="px-4 hover:no-underline">
-            <div className="flex items-center gap-3 flex-1">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-muted"><Settings className="h-4 w-4" /></span>
-              <span className="flex-1 text-end font-bold">الإعدادات والخصوصية</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 space-y-1 text-end">
-            <button onClick={() => navigate({ to: "/settings" })} className="block w-full text-end py-2 hover:text-primary">الإعدادات</button>
-            <button onClick={() => navigate({ to: "/profile" })} className="block w-full text-end py-2 hover:text-primary">الملف الشخصي</button>
-            <button onClick={toggle} className="w-full flex items-center justify-between py-2 hover:text-primary">
-              <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                {theme === "light" ? "تشغيل" : "إيقاف"}
+        {visible.length > 12 && (
+          <button
+            onClick={() => setShowAll((s) => !s)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-3 text-sm font-bold text-primary"
+          >
+            <ChevronDown className={`h-4 w-4 transition ${showAll ? "rotate-180" : ""}`} />
+            {showAll ? "عرض أقل" : "عرض المزيد"}
+          </button>
+        )}
+      </div>
+
+      {/* Settings rows */}
+      <div className="divide-y rounded-2xl border bg-card">
+        {rows.map((r) => {
+          const Icon = r.icon;
+          return (
+            <button key={r.label} onClick={r.onClick} className="flex w-full items-center gap-3 px-4 py-4 hover:bg-muted/50">
+              <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate text-end font-bold">{r.label}</span>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted">
+                <Icon className="h-4 w-4" />
               </span>
-              <span>الوضع الداكن</span>
             </button>
-            {isAdmin && (
-              <button onClick={() => navigate({ to: "/admin" })} className="w-full flex items-center justify-end gap-2 py-2 text-primary">
-                <span>لوحة تحكم الإدارة</span>
-                <Shield className="h-4 w-4" />
-              </button>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          );
+        })}
 
-      {/* Logout */}
-      <Button
-        variant="secondary"
-        className="w-full h-12 font-bold"
-        onClick={async () => { await signOut(); navigate({ to: "/" }); }}
-      >
-        <LogOut className="h-4 w-4 ms-2" />
-        تسجيل الخروج
-      </Button>
+        <button onClick={toggle} className="flex w-full items-center gap-3 px-4 py-4 hover:bg-muted/50">
+          <span className="shrink-0 text-xs text-muted-foreground">{theme === "light" ? "تشغيل" : "إيقاف"}</span>
+          <span className="min-w-0 flex-1 truncate text-end font-bold">الوضع الداكن</span>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted">
+            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </span>
+        </button>
+
+        {isAdmin && (
+          <button onClick={() => navigate({ to: "/admin" })} className="flex w-full items-center gap-3 px-4 py-4 text-primary hover:bg-muted/50">
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+            <span className="min-w-0 flex-1 truncate text-end font-bold">لوحة تحكم الإدارة</span>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent">
+              <Shield className="h-4 w-4" />
+            </span>
+          </button>
+        )}
+
+        <button
+          onClick={async () => { await signOut(); navigate({ to: "/" }); }}
+          className="flex w-full items-center gap-3 px-4 py-4 text-destructive hover:bg-muted/50"
+        >
+          <ChevronLeft className="h-4 w-4 shrink-0" />
+          <span className="min-w-0 flex-1 truncate text-end font-bold">تسجيل الخروج</span>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-destructive/10">
+            <LogOut className="h-4 w-4" />
+          </span>
+        </button>
+      </div>
+
+      <div className="pt-2 text-center text-[11px] text-muted-foreground">
+        <p>الخصوصية · الشروط · الإعلانات · اختيارات الإعلانات</p>
+        <p className="mt-1 font-bold">KAIAN © 2026</p>
+      </div>
     </div>
   );
 }
