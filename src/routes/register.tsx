@@ -3,30 +3,50 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck, User, UserPlus } from "lucide-react";
+import { AuthBrand, AuthShell } from "@/components/AuthShell";
+import { Field, SocialRow } from "@/components/AuthBits";
 
-export const Route = createFileRoute("/register")({ component: RegisterPage });
+export const Route = createFileRoute("/register")({
+  component: RegisterPage,
+  head: () => ({
+    meta: [
+      { title: "إنشاء حساب جديد | KAIAN" },
+      { name: "description", content: "أنشئ حسابك على KAIAN وابدأ رحلتك: منشورات، ريلز، بث مباشر ورسائل مع أصدقائك." },
+      { property: "og:title", content: "إنشاء حساب جديد | KAIAN" },
+      { property: "og:description", content: "انضم إلى KAIAN وابدأ رحلتك الآن." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+});
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", confirm: "", gender: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", password: "", confirm: "", gender: "" });
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.password !== form.confirm) return toast.error("كلمتا المرور غير متطابقتين");
+    if (!form.fullName.trim()) return toast.error("أدخل اسمك الكامل");
     if (form.password.length < 6) return toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    if (form.password !== form.confirm) return toast.error("كلمتا المرور غير متطابقتين");
+    if (!agree) return toast.error("يجب الموافقة على الشروط والأحكام");
 
     setSubmitting(true);
     const { error } = await supabase.auth.signUp({
-      email: form.email,
+      email: form.email.trim(),
       password: form.password,
       options: {
         emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
-        data: { full_name: `${form.firstName} ${form.lastName}`.trim() },
+        data: { full_name: form.fullName.trim(), gender: form.gender || null },
       },
     });
     setSubmitting(false);
@@ -35,70 +55,156 @@ function RegisterPage() {
     navigate({ to: "/onboarding" });
   };
 
+  const social = async (provider: "google" | "facebook" | "apple") => {
+    if (provider !== "google") return toast.info("هذه الطريقة ستتوفر قريباً");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) toast.error("التسجيل عبر Google غير مهيأ حالياً");
+  };
+
+  const genderBtn = (value: string, label: string, sign: string) => {
+    const active = form.gender === value;
+    return (
+      <button
+        type="button"
+        onClick={() => set("gender", value)}
+        className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition ${
+          active ? "bg-brand-gradient text-primary-foreground shadow-elegant" : "text-foreground hover:bg-muted"
+        }`}
+      >
+        <span className="text-lg leading-none">{sign}</span>
+        {label}
+      </button>
+    );
+  };
+
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-soft-gradient">
-      <div className="relative hidden lg:flex flex-col justify-between p-12 bg-brand-gradient text-primary-foreground overflow-hidden">
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 backdrop-blur text-2xl font-black">K</div>
-          <span className="text-3xl font-black">KAIAN</span>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <h1 className="text-5xl font-black leading-tight">انضم إلى KAIAN<br /><span className="opacity-90">وابدأ قصتك اليوم.</span></h1>
-          <p className="mt-4 max-w-md text-lg opacity-90">شارك ما هو جديد، لحظات الحياة مع أصدقائك.</p>
-        </motion.div>
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
-        <p className="text-sm opacity-70 relative">© {new Date().getFullYear()} KAIAN</p>
+    <AuthShell
+      topBar={
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={() => navigate({ to: "/" })}
+            aria-label="رجوع"
+            className="grid h-11 w-11 place-items-center rounded-2xl bg-card shadow-card"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+          <Link
+            to="/"
+            className="flex items-center gap-2 rounded-full bg-card px-4 py-2.5 text-sm shadow-card"
+          >
+            <span className="text-muted-foreground">لديك حساب؟</span>
+            <span className="font-bold text-primary">تسجيل الدخول</span>
+            <ArrowLeft className="h-4 w-4 text-primary" />
+          </Link>
+        </div>
+      }
+    >
+      <AuthBrand />
+
+      <div className="mt-6 text-center">
+        <h1 className="text-3xl font-black sm:text-4xl">
+          <span className="text-primary">إنشاء</span> <span className="text-destructive">حساب</span>{" "}
+          <span className="text-primary">جديد</span>
+        </h1>
+        <p className="mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+          انضم إلينا وابدأ رحلتك الآن
+        </p>
       </div>
 
-      <div className="flex items-center justify-center p-6 sm:p-10">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          <h2 className="text-4xl font-black text-primary">إنشاء حساب</h2>
-          <p className="mt-2 text-sm text-muted-foreground">أنشئ حسابك على KAIAN!</p>
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <Field label="الاسم الكامل" icon={<User className="h-5 w-5" />}>
+          <Input
+            required
+            placeholder="أدخل اسمك الكامل"
+            value={form.fullName}
+            onChange={(e) => set("fullName", e.target.value)}
+            className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
+          />
+        </Field>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>الاسم الأول</Label>
-                <Input required value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-11 rounded-xl" />
-              </div>
-              <div className="space-y-2">
-                <Label>الاسم الأخير</Label>
-                <Input required value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} className="h-11 rounded-xl" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>البريد الإلكتروني</Label>
-              <Input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-11 rounded-xl" />
-            </div>
-            <div className="space-y-2">
-              <Label>كلمة المرور</Label>
-              <Input type="password" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="h-11 rounded-xl" />
-            </div>
-            <div className="space-y-2">
-              <Label>تأكيد كلمة المرور</Label>
-              <Input type="password" required value={form.confirm} onChange={e => setForm({ ...form, confirm: e.target.value })} className="h-11 rounded-xl" />
-            </div>
-            <div className="space-y-2">
-              <Label>الجنس</Label>
-              <Select value={form.gender} onValueChange={v => setForm({ ...form, gender: v })}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="اختر..." /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">ذكر</SelectItem>
-                  <SelectItem value="female">أنثى</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <Field label="البريد الإلكتروني" icon={<Mail className="h-5 w-5" />}>
+          <Input
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="أدخل بريدك الإلكتروني"
+            value={form.email}
+            onChange={(e) => set("email", e.target.value)}
+            className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
+          />
+        </Field>
 
-            <Button type="submit" disabled={submitting} className="w-full h-12 rounded-xl bg-brand-gradient text-base font-bold shadow-elegant hover:opacity-95">
-              {submitting ? "جاري الإنشاء..." : "هيا بنا!"}
-            </Button>
-          </form>
+        <Field label="كلمة المرور" icon={<Lock className="h-5 w-5" />}>
+          <div className="flex items-center gap-2">
+            <Input
+              type={showPass ? "text" : "password"}
+              required
+              placeholder="أدخل كلمة المرور"
+              value={form.password}
+              onChange={(e) => set("password", e.target.value)}
+              className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
+            />
+            <button type="button" aria-label="إظهار كلمة المرور" onClick={() => setShowPass((s) => !s)} className="text-muted-foreground">
+              {showPass ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </button>
+          </div>
+        </Field>
 
-          <p className="mt-6 text-center text-sm">
-            لديك حساب بالفعل؟ <Link to="/" className="font-semibold text-primary hover:underline">تسجيل الدخول</Link>
-          </p>
-        </motion.div>
-      </div>
-    </div>
+        <Field label="تأكيد كلمة المرور" icon={<Lock className="h-5 w-5" />}>
+          <div className="flex items-center gap-2">
+            <Input
+              type={showConfirm ? "text" : "password"}
+              required
+              placeholder="أعد إدخال كلمة المرور"
+              value={form.confirm}
+              onChange={(e) => set("confirm", e.target.value)}
+              className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
+            />
+            <button type="button" aria-label="إظهار التأكيد" onClick={() => setShowConfirm((s) => !s)} className="text-muted-foreground">
+              {showConfirm ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </button>
+          </div>
+        </Field>
+
+        <div className="space-y-1.5">
+          <p className="text-sm font-bold text-primary">الجنس</p>
+          <div className="field-shell flex items-center gap-2 rounded-2xl p-1.5">
+            {genderBtn("male", "ذكر", "♂")}
+            <span className="h-8 w-px bg-border" />
+            {genderBtn("female", "أنثى", "♀")}
+          </div>
+        </div>
+
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <Checkbox checked={agree} onCheckedChange={(v) => setAgree(Boolean(v))} className="mt-0.5" />
+          <span>
+            أوافق على <span className="font-bold text-primary">الشروط والأحكام</span> و
+            <span className="font-bold text-destructive"> سياسة الخصوصية</span>
+          </span>
+        </label>
+
+        <Button
+          type="submit"
+          disabled={submitting}
+          className="h-14 w-full gap-2 rounded-2xl bg-brand-gradient text-lg font-black text-primary-foreground shadow-elegant hover:opacity-95"
+        >
+          <UserPlus className="h-5 w-5" />
+          {submitting ? "جاري الإنشاء..." : "إنشاء حساب"}
+        </Button>
+      </form>
+
+      <SocialRow onPick={social} />
+
+      <p className="mt-6 text-center text-sm">
+        لديك حساب بالفعل؟{" "}
+        <Link to="/" className="font-black text-destructive underline decoration-destructive/50 underline-offset-4">
+          تسجيل الدخول
+        </Link>
+      </p>
+    </AuthShell>
   );
 }
