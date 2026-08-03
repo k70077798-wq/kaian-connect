@@ -19,29 +19,25 @@ type Tile = { to: string; label: string; icon: any; color: string; adminOnly?: b
 /** Top circular shortcuts (like the reference "اختصاراتك" row). */
 const QUICK: Tile[] = [
   { to: "/friends", label: "أصدقاء مقربون", icon: Users, color: "bg-destructive" },
-  { to: "/games", label: "الألعاب", icon: Gamepad2, color: "bg-emerald-500" },
-  { to: "/marketplace", label: "عروض اليوم", icon: Bookmark, color: "bg-orange-500" },
+  { to: "/reels", label: "ريلز", icon: Radio, color: "bg-emerald-500" },
+  { to: "/watch", label: "الفيديو", icon: Clapperboard, color: "bg-orange-500" },
   { to: "/groups", label: "المجموعات", icon: UsersRound, color: "bg-primary" },
-  { to: "/saved", label: "المحفوظات", icon: Bookmark, color: "bg-violet-500" },
+  { to: "/wallet", label: "المحفظة", icon: Wallet, color: "bg-violet-500" },
 ];
 
 const TILES: Tile[] = [
   { to: "/groups", label: "المجموعات", icon: UsersRound, color: "text-primary" },
-  { to: "/events", label: "الأحداث", icon: Calendar, color: "text-destructive" },
   { to: "/friends", label: "الأصدقاء", icon: Users, color: "text-primary" },
   { to: "/pages", label: "الصفحات", icon: Flag, color: "text-orange-500" },
-  { to: "/memories", label: "الذكريات", icon: History, color: "text-primary" },
   { to: "/watch", label: "الفيديو", icon: Clapperboard, color: "text-primary" },
-  { to: "/saved", label: "العناصر المحفوظة", icon: Bookmark, color: "text-violet-500" },
-  { to: "/marketplace", label: "السوق", icon: Newspaper, color: "text-primary" },
-  { to: "/games", label: "الألعاب", icon: Gamepad2, color: "text-emerald-500" },
-  { to: "/jobs", label: "الوظائف", icon: Newspaper, color: "text-amber-600" },
   { to: "/reels", label: "ريلز", icon: Radio, color: "text-destructive" },
+  { to: "/search", label: "البحث", icon: History, color: "text-primary" },
   { to: "/ads-manager", label: "مركز الإعلانات", icon: Megaphone, color: "text-primary" },
   { to: "/dashboard", label: "لوحة المعلومات", icon: LayoutDashboard, color: "text-primary" },
   { to: "/notifications", label: "الإشعارات", icon: Bell, color: "text-amber-600" },
   { to: "/messages", label: "الرسائل", icon: Newspaper, color: "text-primary" },
   { to: "/wallet", label: "المحفظة", icon: Wallet, color: "text-emerald-600" },
+  { to: "/settings", label: "الإعدادات", icon: Settings, color: "text-primary" },
 ];
 
 function MenuPage() {
