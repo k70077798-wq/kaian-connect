@@ -69,7 +69,7 @@ function WelcomePage() {
   const forgot = async () => {
     if (!email.trim()) return toast.error("أدخل بريدك الإلكتروني أولاً");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: window.location.origin,
     });
     if (error) return toast.error(error.message);
     toast.success("تم إرسال رابط استعادة كلمة المرور إلى بريدك");
