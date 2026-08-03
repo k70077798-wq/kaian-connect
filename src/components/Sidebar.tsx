@@ -1,24 +1,21 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Home, Users, Bookmark, Flag, Calendar, Store, Clapperboard, Gamepad2, Briefcase, Image as ImageIcon, UsersRound, Sun, Moon, User as UserIcon, Settings, Wallet, Megaphone } from "lucide-react";
+import { Home, Users, Flag, Clapperboard, UsersRound, Sun, Moon, User as UserIcon, Settings, Wallet, Megaphone, Search, Bell, MessageCircle, LayoutDashboard } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 
 const items = [
   { to: "/home", icon: Home, label: "آخر الأخبار" },
   { to: "/reels", icon: Clapperboard, label: "الريلز", accent: true },
   { to: "/wallet", icon: Wallet, label: "المحفظة", accent: true },
   { to: "/ads-manager", icon: Megaphone, label: "إعلاناتي" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "لوحة المعلومات" },
   { to: "/friends", icon: Users, label: "الأصدقاء" },
   { to: "/groups", icon: UsersRound, label: "المجموعات" },
   { to: "/pages", icon: Flag, label: "الصفحات" },
-  { to: "/saved", icon: Bookmark, label: "المحفوظات" },
   { to: "/watch", icon: Clapperboard, label: "الفيديوهات" },
-  { to: "/marketplace", icon: Store, label: "السوق" },
-  { to: "/events", icon: Calendar, label: "الأحداث" },
-  { to: "/games", icon: Gamepad2, label: "الألعاب" },
-  { to: "/jobs", icon: Briefcase, label: "الوظائف" },
-  { to: "/memories", icon: ImageIcon, label: "الذكريات" },
+  { to: "/messages", icon: MessageCircle, label: "الرسائل" },
+  { to: "/notifications", icon: Bell, label: "الإشعارات" },
+  { to: "/search", icon: Search, label: "البحث" },
 ];
 
 export function Sidebar() {
