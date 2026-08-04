@@ -80,7 +80,7 @@ export async function notifyAdminUser(userId: string, input: { title: string; co
     image_url: input.imageUrl?.trim() || null,
     action_url: input.actionUrl?.trim() || null,
     link: input.actionUrl?.trim() || null,
-  });
+  } as never);
   if (error) throw error;
   return { ok: true };
 }

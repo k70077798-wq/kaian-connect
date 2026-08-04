@@ -2,8 +2,6 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-const ADMIN_EMAIL = "admin123@admin.com";
-
 interface AuthCtx {
   user: User | null;
   session: Session | null;
@@ -17,10 +15,12 @@ const Ctx = createContext<AuthCtx>({ user: null, session: null, loading: true, i
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
+      if (!s?.user) setIsAdmin(false);
       setLoading(false);
     });
     supabase.auth.getSession().then(({ data }) => {
@@ -30,7 +30,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const isAdmin = session?.user?.email === ADMIN_EMAIL;
+  useEffect(() => {
+    if (!session?.user) return;
+    supabase.from("user_roles").select("role").eq("user_id", session.user.id).eq("role", "admin").maybeSingle().then(({ data }) => setIsAdmin(!!data));
+  }, [session?.user.id]);
 
   return (
     <Ctx.Provider value={{
@@ -44,4 +47,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export const useAuth = () => useContext(Ctx);
-export { ADMIN_EMAIL };
