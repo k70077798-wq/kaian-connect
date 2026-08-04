@@ -17,7 +17,17 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { toast } from "sonner";
 import { adminDeleteUser, adminGetUser, adminListUsers, adminMessageUser, adminNotifyUser, adminSetUserBan, adminUpdateUser } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/_app/admin")({ component: AdminPage });
+export const Route = createFileRoute("/_app/admin")({
+  component: AdminPage,
+  head: () => ({ meta: [
+    { title: "إدارة المستخدمين | KAIAN" },
+    { name: "description", content: "لوحة إدارة مستخدمي ومحتوى منصة KAIAN." },
+    { property: "og:title", content: "إدارة المستخدمين | KAIAN" },
+    { property: "og:description", content: "لوحة إدارة مستخدمي ومحتوى منصة KAIAN." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+});
 
 function AdminPage() {
   const { isAdmin, loading } = useAuth();
