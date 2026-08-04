@@ -44,11 +44,12 @@ export async function getAdminUserDetails(userId: string) {
 }
 
 export async function updateAdminUser(userId: string, values: { fullName?: string; username?: string; bio?: string; verified?: boolean }) {
-  const payload: Record<string, string | boolean | null> = {};
-  if (values.fullName !== undefined) payload.full_name = values.fullName.trim() || null;
-  if (values.username !== undefined) payload.username = values.username.trim() || null;
-  if (values.bio !== undefined) payload.bio = values.bio.trim() || null;
-  if (values.verified !== undefined) payload.verified = values.verified;
+  const payload = {
+    full_name: values.fullName === undefined ? undefined : values.fullName.trim() || null,
+    username: values.username === undefined ? undefined : values.username.trim() || null,
+    bio: values.bio === undefined ? undefined : values.bio.trim() || null,
+    verified: values.verified,
+  };
   const { error } = await supabaseAdmin.from("profiles").update(payload).eq("id", userId);
   if (error) throw error;
   return { ok: true };
