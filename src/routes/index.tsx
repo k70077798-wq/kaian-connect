@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ArrowLeft, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { AuthBrand, AuthShell, LOGO_URL } from "@/components/AuthShell";
 import { Field, SocialRow } from "@/components/AuthBits";
 
@@ -43,6 +43,10 @@ function WelcomePage() {
   const [show, setShow] = useState(false);
   const [remember, setRemember] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const emailError = touched.email && !/^\S+@\S+\.\S+$/.test(email.trim()) ? "أدخل بريدًا إلكترونيًا صحيحًا" : "";
+  const passwordError = touched.password && password.length < 6 ? "كلمة المرور يجب ألا تقل عن 6 أحرف" : "";
+  const formValid = /^\S+@\S+\.\S+$/.test(email.trim()) && password.length >= 6;
 
   const goNext = async (userId: string) => {
     const target = safeNext(next);
@@ -58,6 +62,8 @@ function WelcomePage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ email: true, password: true });
+    if (!formValid) return;
     setSubmitting(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setSubmitting(false);
@@ -104,9 +110,12 @@ function WelcomePage() {
             placeholder="أدخل بريدك الإلكتروني"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+             onBlur={() => setTouched((value) => ({ ...value, email: true }))}
+             aria-invalid={!!emailError}
             className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
           />
         </Field>
+         {emailError && <p className="-mt-2 text-xs font-medium text-destructive">{emailError}</p>}
 
         <Field label="كلمة المرور" icon={<Lock className="h-5 w-5" />}>
           <div className="flex items-center gap-2">
@@ -117,13 +126,16 @@ function WelcomePage() {
               placeholder="أدخل كلمة المرور"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+               onBlur={() => setTouched((value) => ({ ...value, password: true }))}
+               aria-invalid={!!passwordError}
               className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
             />
-            <button type="button" onClick={() => setShow((s) => !s)} aria-label="إظهار كلمة المرور" className="text-muted-foreground">
+             <Button type="button" variant="ghost" size="icon" onClick={() => setShow((s) => !s)} aria-label="إظهار كلمة المرور" className="shrink-0 text-muted-foreground">
               {show ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-            </button>
+             </Button>
           </div>
         </Field>
+         {passwordError && <p className="-mt-2 text-xs font-medium text-destructive">{passwordError}</p>}
 
         <div className="flex items-center justify-between gap-3 text-sm">
           <label className="flex cursor-pointer items-center gap-2">
@@ -137,12 +149,13 @@ function WelcomePage() {
 
         <Button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !formValid}
           className="relative h-14 w-full rounded-2xl bg-brand-gradient text-lg font-black text-primary-foreground shadow-elegant hover:opacity-95"
         >
           <span className="absolute start-2 grid h-10 w-10 place-items-center rounded-full bg-card text-primary">
             <ArrowLeft className="h-5 w-5" />
           </span>
+          {submitting && <Loader2 className="h-5 w-5 animate-spin" />}
           {submitting ? "جاري الدخول..." : "تسجيل الدخول"}
         </Button>
       </form>

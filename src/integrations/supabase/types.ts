@@ -356,29 +356,38 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_url: string | null
           content: string | null
           created_at: string
           id: string
+          image_url: string | null
           link: string | null
           read: boolean
+          title: string | null
           type: string
           user_id: string
         }
         Insert: {
+          action_url?: string | null
           content?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           link?: string | null
           read?: boolean
+          title?: string | null
           type: string
           user_id: string
         }
         Update: {
+          action_url?: string | null
           content?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           link?: string | null
           read?: boolean
+          title?: string | null
           type?: string
           user_id?: string
         }

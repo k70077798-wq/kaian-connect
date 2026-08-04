@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,11 +9,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Users, FileText, Megaphone, Flag, UsersRound, ShieldCheck, Ban, CheckCircle2, Search, TrendingUp } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Users, FileText, Megaphone, Flag, UsersRound, ShieldCheck, Ban, CheckCircle2, Search, Eye, Bell, MessageCircle, Save, Trash2, Loader2 } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { toast } from "sonner";
+import { adminDeleteUser, adminGetUser, adminListUsers, adminMessageUser, adminNotifyUser, adminSetUserBan, adminUpdateUser } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/_app/admin")({ component: AdminPage });
+export const Route = createFileRoute("/_app/admin")({
+  component: AdminPage,
+  head: () => ({ meta: [
+    { title: "إدارة المستخدمين | KAIAN" },
+    { name: "description", content: "لوحة إدارة مستخدمي ومحتوى منصة KAIAN." },
+    { property: "og:title", content: "إدارة المستخدمين | KAIAN" },
+    { property: "og:description", content: "لوحة إدارة مستخدمي ومحتوى منصة KAIAN." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+});
 
 function AdminPage() {
   const { isAdmin, loading } = useAuth();
@@ -22,6 +37,21 @@ function AdminPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [pageLoading, setPageLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [details, setDetails] = useState<any>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [edit, setEdit] = useState({ fullName: "", username: "", bio: "", verified: false });
+  const [notice, setNotice] = useState({ title: "", content: "", imageUrl: "", actionUrl: "" });
+  const [officialMessage, setOfficialMessage] = useState("");
+  const listUsers = useServerFn(adminListUsers);
+  const getUser = useServerFn(adminGetUser);
+  const updateUser = useServerFn(adminUpdateUser);
+  const setUserBan = useServerFn(adminSetUserBan);
+  const removeUser = useServerFn(adminDeleteUser);
+  const notifyUser = useServerFn(adminNotifyUser);
+  const messageUser = useServerFn(adminMessageUser);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -31,29 +61,29 @@ function AdminPage() {
   }, [isAdmin, loading]);
 
   const refresh = async () => {
-    const [u, p, pg, gr, ad] = await Promise.all([
-      supabase.from("profiles").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(100),
+    setPageLoading(true);
+    const [adminUsers, p, pg, gr, ad] = await Promise.all([
+      listUsers(),
       supabase.from("posts").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50),
       supabase.from("pages").select("id", { count: "exact", head: true }),
       supabase.from("groups").select("id", { count: "exact", head: true }),
       supabase.from("ads").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50),
     ]);
-    setUsers(u.data || []);
+    setUsers(adminUsers || []);
     setPosts(p.data || []);
     setAds(ad.data || []);
     setStats({
-      users: u.count || 0, posts: p.count || 0,
+      users: adminUsers?.length || 0, posts: p.count || 0,
       pages: pg.count || 0, groups: gr.count || 0, ads: ad.count || 0,
     });
+    setPageLoading(false);
   };
 
   useEffect(() => { if (isAdmin) refresh(); }, [isAdmin]);
 
   const toggleVerify = async (id: string, current: boolean) => {
-    const { error } = await supabase.from("profiles").update({ verified: !current }).eq("id", id);
-    if (error) return toast.error("فشل: " + error.message);
-    toast.success(current ? "تم إلغاء التوثيق" : "تم توثيق الحساب");
-    refresh();
+    try { await updateUser({ data: { userId: id, verified: !current } }); toast.success(current ? "تم إلغاء التوثيق" : "تم توثيق الحساب"); await refresh(); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "تعذر تحديث التوثيق"); }
   };
   const setVerifyStyle = async (id: string, style: "brand" | "gold") => {
     const { error } = await supabase.from("profiles").update({ verified_style: style, verified: true }).eq("id", id);
@@ -63,9 +93,23 @@ function AdminPage() {
   };
 
   const toggleBan = async (id: string, current: boolean) => {
-    await supabase.from("profiles").update({ is_banned: !current }).eq("id", id);
-    toast.success(current ? "تم رفع الحظر" : "تم حظر المستخدم");
-    refresh();
+    try { await setUserBan({ data: { userId: id, banned: !current } }); toast.success(current ? "تم رفع الحظر" : "تم تعليق الحساب ومنع تسجيل الدخول"); await refresh(); if (selectedId === id) await openUser(id); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "تعذر تحديث حالة الحساب"); }
+  };
+  const openUser = async (id: string) => {
+    setSelectedId(id); setDetailsLoading(true); setDetails(null);
+    try {
+      const data = await getUser({ data: { userId: id } });
+      setDetails(data);
+      setEdit({ fullName: data.profile?.full_name || "", username: data.profile?.username || "", bio: data.profile?.bio || "", verified: !!data.profile?.verified });
+    } catch (error) { toast.error(error instanceof Error ? error.message : "تعذر تحميل بيانات المستخدم"); }
+    finally { setDetailsLoading(false); }
+  };
+  const runAction = async (action: () => Promise<unknown>, success: string) => {
+    setActionLoading(true);
+    try { await action(); toast.success(success); await refresh(); if (selectedId) await openUser(selectedId); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "تعذر تنفيذ العملية"); }
+    finally { setActionLoading(false); }
   };
   const deletePost = async (id: string) => {
     await supabase.from("posts").delete().eq("id", id);
@@ -141,15 +185,16 @@ function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map(u => (
-                    <tr key={u.id} className="border-b hover:bg-muted/40 transition">
+                  {pageLoading && Array.from({ length: 5 }).map((_, index) => <tr key={index}><td colSpan={4} className="py-3"><Skeleton className="h-12 w-full" /></td></tr>)}
+                  {!pageLoading && filteredUsers.map(u => (
+                    <tr key={u.id} className="border-b hover:bg-muted/40 transition cursor-pointer" onClick={() => openUser(u.id)}>
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9">
                             <AvatarImage src={u.avatar_url ?? undefined} />
                             <AvatarFallback className="bg-brand-gradient text-primary-foreground text-xs">{(u.full_name || "K").slice(0,2).toUpperCase()}</AvatarFallback>
                           </Avatar>
-                          <span className="font-semibold">{u.full_name || "—"}</span>
+                          <div><span className="font-semibold block">{u.full_name || "—"}</span><span className="text-xs text-muted-foreground">{u.email || "—"}</span></div>
                           {u.verified && <VerifiedBadge style={(u.verified_style as any) || "brand"} size={14} />}
                         </div>
                       </td>
@@ -159,18 +204,19 @@ function AdminPage() {
                       </td>
                       <td className="py-3 px-2">
                         <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" onClick={() => toggleVerify(u.id, !!u.verified)}>
+                           <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); toggleVerify(u.id, !!u.verified); }}>
                             <CheckCircle2 className="h-3 w-3 ms-1" />{u.verified ? "إلغاء" : "توثيق"}
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => setVerifyStyle(u.id, "brand")} className="gap-1">
+                           <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); setVerifyStyle(u.id, "brand"); }} className="gap-1">
                             <VerifiedBadge style="brand" size={12} />رسمي
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => setVerifyStyle(u.id, "gold")} className="gap-1">
+                           <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); setVerifyStyle(u.id, "gold"); }} className="gap-1">
                             <VerifiedBadge style="gold" size={12} />ذهبي
                           </Button>
-                          <Button size="sm" variant={u.is_banned ? "outline" : "destructive"} onClick={() => toggleBan(u.id, !!u.is_banned)}>
+                           <Button size="sm" variant={u.is_banned ? "outline" : "destructive"} onClick={(event) => { event.stopPropagation(); toggleBan(u.id, !!u.is_banned); }}>
                             <Ban className="h-3 w-3 ms-1" />{u.is_banned ? "رفع الحظر" : "حظر"}
                           </Button>
+                           <Button size="sm" variant="ghost" onClick={(event) => { event.stopPropagation(); openUser(u.id); }}><Eye className="h-3 w-3 ms-1" />تفاصيل</Button>
                         </div>
                       </td>
                     </tr>
@@ -201,6 +247,24 @@ function AdminPage() {
         <TabsContent value="withdrawals" className="mt-4"><AdminWithdrawals/></TabsContent>
         <TabsContent value="campaigns" className="mt-4"><AdminCampaigns/></TabsContent>
       </Tabs>
+      <Dialog open={!!selectedId} onOpenChange={(open) => { if (!open) { setSelectedId(null); setDetails(null); } }}>
+        <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto" dir="rtl">
+          <DialogHeader className="text-right"><DialogTitle>إدارة حساب المستخدم</DialogTitle><DialogDescription>عرض البيانات وتعديل الحساب أو التواصل معه من حساب KAIAN الرسمي.</DialogDescription></DialogHeader>
+          {detailsLoading ? <div className="space-y-3"><Skeleton className="h-20 w-full" /><Skeleton className="h-40 w-full" /><Skeleton className="h-28 w-full" /></div> : details?.profile && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 rounded-lg border p-4">
+                <Avatar className="h-16 w-16"><AvatarImage src={details.profile.avatar_url ?? undefined} /><AvatarFallback>{(details.profile.full_name || "K").slice(0, 2)}</AvatarFallback></Avatar>
+                <div className="min-w-0"><h2 className="truncate text-xl font-black">{details.profile.full_name || "مستخدم"}</h2><p className="truncate text-sm text-muted-foreground">{details.email || "—"} · @{details.profile.username || "—"}</p><p className="mt-1 text-xs text-muted-foreground">{details.friendsCount} صديق · {details.posts.length} منشور · {details.pages.length} صفحة · {details.groups.length} مجموعة</p></div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2"><Input value={edit.fullName} onChange={(event) => setEdit({ ...edit, fullName: event.target.value })} placeholder="الاسم الكامل" /><Input value={edit.username} onChange={(event) => setEdit({ ...edit, username: event.target.value })} placeholder="اسم المستخدم" /><Textarea className="sm:col-span-2" value={edit.bio} onChange={(event) => setEdit({ ...edit, bio: event.target.value })} placeholder="السيرة الذاتية" /></div>
+              <div className="flex flex-wrap gap-2"><Button disabled={actionLoading} onClick={() => runAction(() => updateUser({ data: { userId: details.profile.id, ...edit } }), "تم حفظ بيانات المستخدم")}><Save className="h-4 w-4 ms-1" />حفظ التعديلات</Button><Button variant={details.profile.is_banned ? "outline" : "destructive"} disabled={actionLoading} onClick={() => toggleBan(details.profile.id, !!details.profile.is_banned)}><Ban className="h-4 w-4 ms-1" />{details.profile.is_banned ? "رفع تعليق الحساب" : "تعليق وحظر الحساب"}</Button><Button variant="destructive" disabled={actionLoading} onClick={() => { if (window.confirm("هل تريد حذف هذا المستخدم نهائيًا؟ لا يمكن التراجع.")) runAction(() => removeUser({ data: { userId: details.profile.id } }), "تم حذف المستخدم").then(() => setSelectedId(null)); }}><Trash2 className="h-4 w-4 ms-1" />حذف نهائي</Button></div>
+              <div className="border-t pt-4"><h3 className="mb-3 flex items-center gap-2 font-bold"><Bell className="h-4 w-4" />إرسال إشعار</h3><div className="grid gap-2 sm:grid-cols-2"><Input placeholder="عنوان الإشعار" value={notice.title} onChange={(event) => setNotice({ ...notice, title: event.target.value })} /><Input placeholder="رابط داخلي اختياري مثل /home" value={notice.actionUrl} onChange={(event) => setNotice({ ...notice, actionUrl: event.target.value })} /><Input className="sm:col-span-2" placeholder="رابط صورة اختياري" value={notice.imageUrl} onChange={(event) => setNotice({ ...notice, imageUrl: event.target.value })} /><Textarea className="sm:col-span-2" placeholder="نص الإشعار" value={notice.content} onChange={(event) => setNotice({ ...notice, content: event.target.value })} /><Button disabled={actionLoading || !notice.title.trim() || !notice.content.trim()} onClick={() => runAction(() => notifyUser({ data: { userId: details.profile.id, ...notice } }), "تم إرسال الإشعار").then(() => setNotice({ title: "", content: "", imageUrl: "", actionUrl: "" }))}>إرسال الإشعار</Button></div></div>
+              <div className="border-t pt-4"><h3 className="mb-3 flex items-center gap-2 font-bold"><MessageCircle className="h-4 w-4" />مراسلة باسم الحساب الرسمي</h3><Textarea placeholder="اكتب الرسالة الرسمية..." value={officialMessage} onChange={(event) => setOfficialMessage(event.target.value)} /><Button className="mt-2" disabled={actionLoading || !officialMessage.trim()} onClick={() => runAction(() => messageUser({ data: { userId: details.profile.id, content: officialMessage } }), "تم إرسال الرسالة").then(() => setOfficialMessage(""))}>{actionLoading && <Loader2 className="h-4 w-4 animate-spin" />}إرسال الرسالة</Button></div>
+              <div className="border-t pt-4"><h3 className="mb-2 font-bold">آخر المنشورات</h3><div className="space-y-2">{details.posts.slice(0, 5).map((post: any) => <div key={post.id} className="rounded-lg bg-muted p-3 text-sm">{post.content || "منشور وسائط"}</div>)}{details.posts.length === 0 && <p className="text-sm text-muted-foreground">لا توجد منشورات.</p>}</div></div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

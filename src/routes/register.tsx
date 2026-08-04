@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck, User, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, User, UserPlus } from "lucide-react";
 import { AuthBrand, AuthShell } from "@/components/AuthShell";
 import { Field, SocialRow } from "@/components/AuthBits";
 
@@ -30,11 +30,22 @@ function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const errors = {
+    fullName: form.fullName.trim().length < 2 ? "الاسم يجب ألا يقل عن حرفين" : "",
+    email: !/^\S+@\S+\.\S+$/.test(form.email.trim()) ? "أدخل بريدًا إلكترونيًا صحيحًا" : "",
+    password: form.password.length < 6 ? "استخدم 6 أحرف على الأقل" : "",
+    confirm: form.confirm !== form.password ? "كلمتا المرور غير متطابقتين" : "",
+    agree: !agree ? "يجب الموافقة على الشروط والأحكام" : "",
+  };
+  const formValid = !Object.values(errors).some(Boolean);
+  const touch = (field: string) => setTouched((value) => ({ ...value, [field]: true }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ fullName: true, email: true, password: true, confirm: true, agree: true });
     if (!form.fullName.trim()) return toast.error("أدخل اسمك الكامل");
     if (form.password.length < 6) return toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
     if (form.password !== form.confirm) return toast.error("كلمتا المرور غير متطابقتين");
@@ -122,9 +133,12 @@ function RegisterPage() {
             placeholder="أدخل اسمك الكامل"
             value={form.fullName}
             onChange={(e) => set("fullName", e.target.value)}
+             onBlur={() => touch("fullName")}
+             aria-invalid={touched.fullName && !!errors.fullName}
             className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
           />
         </Field>
+         {touched.fullName && errors.fullName && <p className="-mt-2 text-xs font-medium text-destructive">{errors.fullName}</p>}
 
         <Field label="البريد الإلكتروني" icon={<Mail className="h-5 w-5" />}>
           <Input
@@ -134,9 +148,12 @@ function RegisterPage() {
             placeholder="أدخل بريدك الإلكتروني"
             value={form.email}
             onChange={(e) => set("email", e.target.value)}
+             onBlur={() => touch("email")}
+             aria-invalid={touched.email && !!errors.email}
             className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
           />
         </Field>
+         {touched.email && errors.email && <p className="-mt-2 text-xs font-medium text-destructive">{errors.email}</p>}
 
         <Field label="كلمة المرور" icon={<Lock className="h-5 w-5" />}>
           <div className="flex items-center gap-2">
@@ -146,13 +163,16 @@ function RegisterPage() {
               placeholder="أدخل كلمة المرور"
               value={form.password}
               onChange={(e) => set("password", e.target.value)}
+               onBlur={() => touch("password")}
+               aria-invalid={touched.password && !!errors.password}
               className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
             />
-            <button type="button" aria-label="إظهار كلمة المرور" onClick={() => setShowPass((s) => !s)} className="text-muted-foreground">
+             <Button type="button" variant="ghost" size="icon" aria-label="إظهار كلمة المرور" onClick={() => setShowPass((s) => !s)} className="shrink-0 text-muted-foreground">
               {showPass ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-            </button>
+             </Button>
           </div>
         </Field>
+         {touched.password && errors.password ? <p className="-mt-2 text-xs font-medium text-destructive">{errors.password}</p> : form.password.length >= 6 && <p className="-mt-2 flex items-center gap-1 text-xs font-medium text-emerald-600"><CheckCircle2 className="h-3 w-3" />كلمة مرور صالحة</p>}
 
         <Field label="تأكيد كلمة المرور" icon={<Lock className="h-5 w-5" />}>
           <div className="flex items-center gap-2">
@@ -162,13 +182,16 @@ function RegisterPage() {
               placeholder="أعد إدخال كلمة المرور"
               value={form.confirm}
               onChange={(e) => set("confirm", e.target.value)}
+               onBlur={() => touch("confirm")}
+               aria-invalid={touched.confirm && !!errors.confirm}
               className="h-11 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
             />
-            <button type="button" aria-label="إظهار التأكيد" onClick={() => setShowConfirm((s) => !s)} className="text-muted-foreground">
+             <Button type="button" variant="ghost" size="icon" aria-label="إظهار التأكيد" onClick={() => setShowConfirm((s) => !s)} className="shrink-0 text-muted-foreground">
               {showConfirm ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-            </button>
+             </Button>
           </div>
         </Field>
+         {touched.confirm && errors.confirm ? <p className="-mt-2 text-xs font-medium text-destructive">{errors.confirm}</p> : form.confirm && !errors.confirm && <p className="-mt-2 flex items-center gap-1 text-xs font-medium text-emerald-600"><CheckCircle2 className="h-3 w-3" />كلمتا المرور متطابقتان</p>}
 
         <div className="space-y-1.5">
           <p className="text-sm font-bold text-primary">الجنس</p>
@@ -180,19 +203,20 @@ function RegisterPage() {
         </div>
 
         <label className="flex cursor-pointer items-start gap-2 text-sm">
-          <Checkbox checked={agree} onCheckedChange={(v) => setAgree(Boolean(v))} className="mt-0.5" />
+          <Checkbox checked={agree} onCheckedChange={(v) => { setAgree(Boolean(v)); touch("agree"); }} className="mt-0.5" />
           <span>
             أوافق على <span className="font-bold text-primary">الشروط والأحكام</span> و
             <span className="font-bold text-destructive"> سياسة الخصوصية</span>
           </span>
         </label>
+         {touched.agree && errors.agree && <p className="-mt-2 text-xs font-medium text-destructive">{errors.agree}</p>}
 
         <Button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !formValid}
           className="h-14 w-full gap-2 rounded-2xl bg-brand-gradient text-lg font-black text-primary-foreground shadow-elegant hover:opacity-95"
         >
-          <UserPlus className="h-5 w-5" />
+          {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserPlus className="h-5 w-5" />}
           {submitting ? "جاري الإنشاء..." : "إنشاء حساب"}
         </Button>
       </form>
