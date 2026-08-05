@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -51,17 +51,19 @@ function VideoCard({ post, active, muted, onToggleMute, onLike, onComment, onSha
       <div className="w-full max-w-2xl bg-card rounded-2xl overflow-hidden shadow-lg border">
         {/* header */}
         <div className="flex items-center gap-3 p-3">
+          <Link to="/profile/$userId" params={{ userId: post.user_id }} aria-label={`فتح ملف ${post.profile?.full_name || "المستخدم"}`}>
           <Avatar className="h-10 w-10">
             <AvatarImage src={post.profile?.avatar_url ?? undefined} />
             <AvatarFallback className="bg-brand-gradient text-primary-foreground text-xs">
               {(post.profile?.full_name || "K").slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
+          </Link>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm flex items-center gap-1 truncate">
+            <Link to="/profile/$userId" params={{ userId: post.user_id }} className="font-bold text-sm flex items-center gap-1 truncate hover:underline">
               {post.profile?.full_name || "مستخدم"}
               {post.profile?.verified && <span className="text-primary">✓</span>}
-            </p>
+            </Link>
             <p className="text-[11px] text-muted-foreground">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ar })}
             </p>
@@ -284,14 +286,16 @@ function WatchPage() {
               {comments.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">كن أول من يعلق</p>}
               {comments.map((c) => (
                 <div key={c.id} className="flex gap-2">
-                  <Avatar className="h-8 w-8">
+                   <Link to="/profile/$userId" params={{ userId: c.user_id }} aria-label={`فتح ملف ${c.profile?.full_name || "المستخدم"}`}>
+                   <Avatar className="h-8 w-8">
                     <AvatarImage src={c.profile?.avatar_url ?? undefined} />
                     <AvatarFallback className="bg-brand-gradient text-primary-foreground text-xs">
                       {(c.profile?.full_name || "K").slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
+                   </Link>
                   <div className="flex-1 rounded-2xl bg-muted px-3 py-2">
-                    <p className="text-xs font-bold">{c.profile?.full_name || "مستخدم"}</p>
+                     <Link to="/profile/$userId" params={{ userId: c.user_id }} className="text-xs font-bold hover:underline">{c.profile?.full_name || "مستخدم"}</Link>
                     <p className="text-sm">{c.content}</p>
                   </div>
                 </div>
