@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/notifications")({ component: NotificationsPage });
 
-interface Notif { id: string; user_id: string; type: string; content: string | null; link: string | null; read: boolean; created_at: string; }
+interface Notif { id: string; user_id: string; type: string; title: string | null; content: string | null; image_url: string | null; action_url: string | null; link: string | null; read: boolean; created_at: string; }
 
 const iconFor = (t: string) => {
   if (t === "like") return <Heart className="h-5 w-5 text-red-500" />;
@@ -51,7 +51,8 @@ function NotificationsPage() {
 
   const open = async (n: Notif) => {
     if (!n.read) await supabase.from("notifications").update({ read: true }).eq("id", n.id);
-    if (n.link) navigate({ to: n.link as any });
+    const destination = n.action_url || n.link;
+    if (destination) navigate({ to: destination as any });
   };
 
   const unread = items.filter(i => !i.read).length;
@@ -79,8 +80,9 @@ function NotificationsPage() {
         <div className="space-y-2">
           {items.map(n => (
             <Card key={n.id} onClick={() => open(n)} className={`p-4 flex items-start gap-3 cursor-pointer transition hover:bg-muted/50 ${!n.read ? "bg-primary/5 border-primary/30" : ""}`}>
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-muted shrink-0">{iconFor(n.type)}</div>
+               {n.image_url ? <img src={n.image_url} alt="" className="h-12 w-12 rounded-lg object-cover shrink-0" /> : <div className="grid h-10 w-10 place-items-center rounded-full bg-muted shrink-0">{iconFor(n.type)}</div>}
               <div className="flex-1 min-w-0">
+                 {n.title && <p className="mb-0.5 font-bold">{n.title}</p>}
                 <p className="text-sm">{n.content}</p>
                 <p className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: ar })}</p>
               </div>

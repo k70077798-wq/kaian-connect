@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -93,12 +93,14 @@ function FriendsPage() {
 
   const PersonRow = ({ p, actions }: { p: Profile; actions: React.ReactNode }) => (
     <Card className="p-3 flex items-center gap-3">
+      <Link to="/profile/$userId" params={{ userId: p.id }} aria-label={`فتح ملف ${p.full_name || "المستخدم"}`}>
       <Avatar className="h-12 w-12">
         <AvatarImage src={p.avatar_url ?? undefined} />
         <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials(p.full_name)}</AvatarFallback>
       </Avatar>
+      </Link>
       <div className="flex-1 min-w-0">
-        <p className="font-bold truncate flex items-center gap-1">{p.full_name || "مستخدم"}{p.verified && <span className="text-primary">✓</span>}</p>
+        <Link to="/profile/$userId" params={{ userId: p.id }} className="font-bold truncate flex items-center gap-1 hover:underline">{p.full_name || "مستخدم"}{p.verified && <span className="text-primary">✓</span>}</Link>
         <p className="text-xs text-muted-foreground truncate">@{p.username || "—"}</p>
       </div>
       <div className="flex gap-2">{actions}</div>
