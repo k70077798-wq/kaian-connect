@@ -16,6 +16,7 @@ import { ar } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { backgroundStyle } from "@/components/PostComposer";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { Link } from "@tanstack/react-router";
 
 interface Profile { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; verified_style?: string | null; }
 interface Post {
@@ -162,13 +163,15 @@ export function UserPostsList({ userId, viewMode = "list", reloadKey = 0 }: { us
             <Card className="p-4 shadow-card">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
+                  <Link to="/profile/$userId" params={{ userId: post.user_id }} aria-label={`فتح ملف ${post.profile?.full_name || "المستخدم"}`}>
                   <Avatar className="h-11 w-11">
                     <AvatarImage src={post.profile?.avatar_url ?? undefined} />
                     <AvatarFallback className="bg-brand-gradient text-primary-foreground font-bold">{initials(post.profile?.full_name)}</AvatarFallback>
                   </Avatar>
+                  </Link>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-bold text-sm">{post.profile?.full_name || "مستخدم"}</span>
+                      <Link to="/profile/$userId" params={{ userId: post.user_id }} className="font-bold text-sm hover:underline">{post.profile?.full_name || "مستخدم"}</Link>
                       {post.profile?.verified && <VerifiedBadge style={(post.profile?.verified_style as any) || "brand"} size={14} />}
                       {post.feeling && <span className="text-xs text-muted-foreground">— يشعر بـ {post.feeling}</span>}
                       {post.location && <span className="text-xs text-muted-foreground inline-flex items-center gap-0.5">— <MapPin className="h-3 w-3" />{post.location}</span>}
@@ -234,12 +237,14 @@ export function UserPostsList({ userId, viewMode = "list", reloadKey = 0 }: { us
                 <div className="mt-3 space-y-3 border-t pt-3">
                   {(commentsByPost[post.id] || []).map(c => (
                     <div key={c.id} className="flex gap-2">
+                      <Link to="/profile/$userId" params={{ userId: c.user_id }} aria-label={`فتح ملف ${c.profile?.full_name || "المستخدم"}`}>
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={c.profile?.avatar_url ?? undefined} />
                         <AvatarFallback className="bg-brand-gradient text-primary-foreground text-xs">{initials(c.profile?.full_name)}</AvatarFallback>
                       </Avatar>
+                      </Link>
                       <div className="flex-1 rounded-2xl bg-muted px-3 py-2">
-                        <p className="text-xs font-bold">{c.profile?.full_name || "مستخدم"}</p>
+                        <Link to="/profile/$userId" params={{ userId: c.user_id }} className="text-xs font-bold hover:underline">{c.profile?.full_name || "مستخدم"}</Link>
                         <p className="text-sm">{c.content}</p>
                       </div>
                     </div>

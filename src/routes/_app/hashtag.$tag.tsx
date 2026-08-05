@@ -51,22 +51,26 @@ function HashtagPage() {
       {!loading && posts.length === 0 && <Card className="p-12 text-center text-muted-foreground">لا توجد منشورات بهذا الوسم</Card>}
 
       {posts.map(p => (
-        <Link key={p.id} to="/post/$postId" params={{ postId: p.id }}>
+        <div key={p.id}>
           <Card className="p-4 shadow-card hover:shadow-elegant transition-shadow">
             <div className="flex items-center gap-3 mb-2">
+              <Link to="/profile/$userId" params={{ userId: p.user_id }} aria-label={`فتح ملف ${p.profile?.full_name || "المستخدم"}`}>
               <Avatar className="h-10 w-10">
                 <AvatarImage src={p.profile?.avatar_url ?? undefined} />
                 <AvatarFallback className="bg-brand-gradient text-primary-foreground">{(p.profile?.full_name || "K").slice(0, 2)}</AvatarFallback>
               </Avatar>
+              </Link>
               <div>
-                <p className="font-bold text-sm">{p.profile?.full_name || "مستخدم"}</p>
+                <Link to="/profile/$userId" params={{ userId: p.user_id }} className="font-bold text-sm hover:underline">{p.profile?.full_name || "مستخدم"}</Link>
                 <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(p.created_at), { addSuffix: true, locale: ar })}</p>
               </div>
             </div>
-            {p.content && <PostContent text={p.content} className="text-[15px]" postId={p.id} maxChars={200} />}
-            {p.image_url && <img src={p.image_url} className="mt-2 w-full rounded-xl max-h-80 object-cover" alt="" />}
+            <Link to="/post/$postId" params={{ postId: p.id }} className="block">
+              {p.content && <PostContent text={p.content} className="text-[15px]" postId={p.id} maxChars={200} />}
+              {p.image_url && <img src={p.image_url} className="mt-2 w-full rounded-xl max-h-80 object-cover" alt="" />}
+            </Link>
           </Card>
-        </Link>
+        </div>
       ))}
     </div>
   );

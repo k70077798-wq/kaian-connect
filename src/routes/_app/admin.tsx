@@ -38,6 +38,7 @@ function AdminPage() {
   const [ads, setAds] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [pageLoading, setPageLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [details, setDetails] = useState<any>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -62,21 +63,26 @@ function AdminPage() {
 
   const refresh = async () => {
     setPageLoading(true);
-    const [adminUsers, p, pg, gr, ad] = await Promise.all([
-      listUsers(),
-      supabase.from("posts").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50),
-      supabase.from("pages").select("id", { count: "exact", head: true }),
-      supabase.from("groups").select("id", { count: "exact", head: true }),
-      supabase.from("ads").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50),
-    ]);
-    setUsers(adminUsers || []);
-    setPosts(p.data || []);
-    setAds(ad.data || []);
-    setStats({
-      users: adminUsers?.length || 0, posts: p.count || 0,
-      pages: pg.count || 0, groups: gr.count || 0, ads: ad.count || 0,
-    });
-    setPageLoading(false);
+    setPageError("");
+    try {
+      const [adminUsers, p, pg, gr, ad] = await Promise.all([
+        listUsers(),
+        supabase.from("posts").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50),
+        supabase.from("pages").select("id", { count: "exact", head: true }),
+        supabase.from("groups").select("id", { count: "exact", head: true }),
+        supabase.from("ads").select("*", { count: "exact" }).order("created_at", { ascending: false }).limit(50),
+      ]);
+      setUsers(adminUsers || []);
+      setPosts(p.data || []);
+      setAds(ad.data || []);
+      setStats({ users: adminUsers?.length || 0, posts: p.count || 0, pages: pg.count || 0, groups: gr.count || 0, ads: ad.count || 0 });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "تعذر تحميل لوحة التحكم";
+      setPageError(message);
+      toast.error("تعذر تحميل بيانات لوحة التحكم");
+    } finally {
+      setPageLoading(false);
+    }
   };
 
   useEffect(() => { if (isAdmin) refresh(); }, [isAdmin]);
@@ -145,6 +151,7 @@ function AdminPage() {
         </div>
         <Badge className="bg-brand-gradient text-primary-foreground border-0">مشرف</Badge>
       </div>
+      {pageError && <Card className="mb-6 border-destructive/40 p-5 text-center"><p className="font-bold text-destructive">تعذر تحميل لوحة التحكم</p><p className="mt-1 text-sm text-muted-foreground">{pageError}</p><Button className="mt-3" variant="outline" onClick={refresh}>إعادة المحاولة</Button></Card>}
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-6">
