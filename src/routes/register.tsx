@@ -96,7 +96,7 @@ function RegisterPage() {
       topBar={
         <div className="flex items-center justify-between gap-3">
           <button
-            onClick={() => navigate({ to: "/" })}
+            onClick={() => navigate({ to: "/", search: { next: undefined } })}
             aria-label="رجوع"
             className="grid h-11 w-11 place-items-center rounded-2xl bg-card shadow-card"
           >
@@ -104,6 +104,7 @@ function RegisterPage() {
           </button>
           <Link
             to="/"
+            search={{ next: undefined }}
             className="flex items-center gap-2 rounded-full bg-card px-4 py-2.5 text-sm shadow-card"
           >
             <span className="text-muted-foreground">لديك حساب؟</span>
@@ -225,7 +226,7 @@ function RegisterPage() {
 
       <p className="mt-6 text-center text-sm">
         لديك حساب بالفعل؟{" "}
-        <Link to="/" className="font-black text-destructive underline decoration-destructive/50 underline-offset-4">
+        <Link to="/" search={{ next: undefined }} className="font-black text-destructive underline decoration-destructive/50 underline-offset-4">
           تسجيل الدخول
         </Link>
       </p>

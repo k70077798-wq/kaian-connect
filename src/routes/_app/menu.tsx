@@ -204,7 +204,7 @@ function MenuPage() {
         )}
 
         <button
-          onClick={async () => { await signOut(); navigate({ to: "/" }); }}
+          onClick={async () => { await signOut(); navigate({ to: "/", search: { next: undefined } }); }}
           className="flex w-full items-center gap-3 px-4 py-4 text-destructive hover:bg-muted/50"
         >
           <ChevronLeft className="h-4 w-4 shrink-0" />

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { Navbar } from "@/components/Navbar";
 import { IncomingCallListener } from "@/components/IncomingCallListener";
+import { SiteNotice } from "@/components/SiteNotice";
 
 export const Route = createFileRoute("/_app")({ component: AppLayout });
 
@@ -11,7 +12,7 @@ function AppLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !session) navigate({ to: "/" });
+    if (!loading && !session) navigate({ to: "/", search: { next: undefined } });
   }, [loading, session]);
 
   if (loading) {
@@ -26,6 +27,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <SiteNotice />
       <Outlet />
       <IncomingCallListener />
     </div>

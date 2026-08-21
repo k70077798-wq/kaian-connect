@@ -46,7 +46,7 @@ export function ReelsStrip() {
           </div>
           <h3 className="font-extrabold">الريلز</h3>
         </div>
-        <Link to="/reels" className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+        <Link to="/reels" search={{ start: undefined }} className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
           الكل <ChevronLeft className="h-3.5 w-3.5" />
         </Link>
       </div>
