@@ -39,7 +39,7 @@ function OnboardingPage() {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/" });
+    if (!loading && !user) navigate({ to: "/", search: { next: undefined } });
   }, [loading, user]);
 
   const finish = async () => {

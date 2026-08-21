@@ -5,11 +5,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Home, MessageCircle, Search, Users, Clapperboard, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SiteLogo } from "@/components/SiteLogo";
+import { useSiteSettings } from "@/lib/site-settings";
 
 interface SearchResult { id: string; full_name: string | null; username: string | null; avatar_url: string | null; verified: boolean | null; }
 
 export function Navbar() {
   const { user } = useAuth();
+  const { settings } = useSiteSettings();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; username: string | null } | null>(null);
   const [unread, setUnread] = useState(0);
@@ -74,12 +77,8 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-card/80 backdrop-blur-xl shadow-card">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
         <Link to="/home" className="flex items-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-white p-0.5 shadow-elegant ring-1 ring-primary/20">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh8iH2aqvCzmEns7KC2YENagCnERIJOCzCHQk5ZkHIoGpf3pBNUwRj2LlMXr8r7NI2JFNWClKqPqtUoIu3kfxW-iYfogd0JPiZP9C5zm0gGkhUFRT-2fAmjmB3izc1mj2JzPQ0Jw0pK4aMGrMV-_J5vSbl3wh1IqshyaIDUDZ_TFNZVDajmZ6gCr9zSj10/s320/%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A7%D9%A0%D9%A3_%D9%A2%D9%A1%D9%A4%D9%A2%D9%A0%D9%A3.png" alt="KAIAN" className="h-full w-full object-contain" />
-          </div>
-          <span className="hidden text-xl font-extrabold tracking-tight sm:inline">
-            KAI<span className="text-primary">A</span>N
-          </span>
+          <SiteLogo compact className="shadow-elegant" />
+          <span className="hidden text-xl font-extrabold sm:inline">{settings.identity.siteName}</span>
         </Link>
 
         <div ref={searchRef} className="relative mx-2 hidden flex-1 max-w-md md:block">
@@ -137,16 +136,16 @@ export function Navbar() {
             <Users className="h-5 w-5" />
             {pendingFriends > 0 && <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">{pendingFriends}</span>}
           </Link>
-          <Link to="/messages" className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الرسائل"><MessageCircle className="h-5 w-5" /></Link>
+          <Link to="/messages" search={{ c: undefined }} className="rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الرسائل"><MessageCircle className="h-5 w-5" /></Link>
           <Link to="/notifications" className="relative rounded-xl p-2.5 hover:bg-muted transition-colors" aria-label="الإشعارات">
             <Bell className="h-5 w-5" />
             {unread > 0 && <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">{unread > 99 ? "99+" : unread}</span>}
           </Link>
         </nav>
 
-        <Link to="/reels" className="rounded-xl p-2.5 hover:bg-muted transition-colors text-primary" aria-label="ريلز">
+        {settings.features.reels && <Link to="/reels" search={{ start: undefined }} className="rounded-xl p-2.5 hover:bg-muted transition-colors text-primary" aria-label="ريلز">
           <Clapperboard className="h-5 w-5" />
-        </Link>
+        </Link>}
 
         <button
           onClick={() => navigate({ to: "/menu" })}
